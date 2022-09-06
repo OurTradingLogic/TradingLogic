@@ -1,0 +1,6 @@
+{
+"test" : [
+    {"symbol":"TATAMOTORS","exchange":"NSE"}],
+"dev" : [{"symbol":"^NSEI","exchange":"NSE"}],
+"holiday" : [{"date":"^ADANIPOWER","exchange":"NSE"}]
+}
