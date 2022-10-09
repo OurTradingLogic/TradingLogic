@@ -1,10 +1,11 @@
 from datetime import datetime, timedelta
 import json
 import pandas as pd
-import YahooAPI as yapi
-import BollingerBand as bband
-import CommonEnum as enum
+import Utility.YahooAPI as yapi
+import Finder.BollingerBand as bband
+import Enum.CommonEnum as enum
 from requests import get
+import Utility.Constant as cons
 
 pd.options.mode.chained_assignment = None
 
@@ -33,7 +34,7 @@ def getfromjson():
 
 def getfromexcel():
     all_list = [] #empty list
-    df = pd.read_excel("Untitled.xlsx")
+    df = pd.read_excel(cons.DATA_FOLDER+"Untitled.xlsx")
     for index, rows in df.iterrows():    
         ticket = str(rows['symbol'])
         list = constructlistjson(ticket, str(getTokenInfo(ticket)), str(rows['exchange'])) 
@@ -42,7 +43,7 @@ def getfromexcel():
 
 def getfrompivotpointexcel():
     all_list = [] #empty list
-    df = pd.read_excel("PivotPointTradingList.xlsx")
+    df = pd.read_excel(cons.DATA_FOLDER + "PivotPointTradingList.xlsx")
     for index, rows in df.iterrows():    
         ticket = str(rows['tradingsymbol'])
         list = constructlistjson(ticket, str(getTokenInfo(ticket)), str(rows['exchange'])) 
@@ -51,7 +52,7 @@ def getfrompivotpointexcel():
 
 def getfromjsondata(node):
     all_list = [] #empty list
-    f = open('./Data.json', 'r')
+    f = open(cons.DATA_FOLDER+'Data.json', 'r')
     load = json.load(f)
 
     for data in load[node]:    

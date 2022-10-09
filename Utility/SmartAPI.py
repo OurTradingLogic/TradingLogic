@@ -1,7 +1,7 @@
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 import pandas as pd
-import YahooAPI as yapi
+import Utility.YahooAPI as yapi
 
 def Order(obj):
     try:

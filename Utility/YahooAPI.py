@@ -3,7 +3,7 @@ from yahoo_fin import stock_info as si
 import pandas as pd 
 import numpy as np
 from datetime import datetime, timedelta
-import Constant as cons
+import Utility.Constant as cons
 
 def amdentNS(tickers):
     tickersresult = []
@@ -141,3 +141,23 @@ def get_live_price(tickers):
     if tickers[0] != '^':
       tickers = tickers + '.NS'
     return si.get_live_price(tickers)
+
+def get_one_day_data_skip_holiday(tickers, index):
+    if index.weekday() == 0:  
+        startdate = index - timedelta(days=3)
+    else:                    
+        startdate = index - timedelta(days=1)
+
+    stock = get_one_day_valid_data(tickers, start = startdate)
+    
+    return stock
+
+def get_one_day_valid_data(tickers, start):
+    stock = get_one_day_data(tickers, start, interval="1d")
+                    
+    #holiday finding
+    while not len(stock) > 0:                   
+        start = start - timedelta(days=1)
+        stock = get_one_day_data(tickers, start, interval="1d")
+    
+    return stock

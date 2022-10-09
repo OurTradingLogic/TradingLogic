@@ -6,7 +6,7 @@ import dateutil.parser
 import hashlib
 import logging
 import datetime
-import SmartAPIExceptions as ex
+import Utility.SmartAPIExceptions as ex
 import requests
 from requests import get
 import re, uuid

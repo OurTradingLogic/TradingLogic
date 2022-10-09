@@ -1,11 +1,11 @@
 from datetime import datetime, timedelta
 import json
 import pandas as pd
-import YahooAPI as yapi
-import BollingerBand as bband
-import PivotPoint as pvpt
-import CommonEnum as enum
-import StockList as slidt
+import Utility.YahooAPI as yapi
+import Finder.BollingerBand as bband
+import Finder.PivotPoint as pvpt
+import Enum.CommonEnum as enum
+import Helper.StockList as slidt
 import os
 
 def gettradinglist2(source):
@@ -54,7 +54,7 @@ def gettradinglist2(source):
                     #print(buy_date)
                     #print(new_dict)
 
-def gettradinglist(source):
+def getbollingerbandtradinglist(source):
     trade_list = [] #empty list
     startdate = datetime.now() - timedelta(days=500)
     enddate = datetime.now()

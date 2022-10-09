@@ -1,8 +1,10 @@
 from enum import Enum
+from lib2to3.pgen2.token import EQUAL
 
 class ExportFrom(Enum):
   EXCEL = 1
   JSON = 2
+  WEB = 3
   NONE = 0 
 
 class InLine(Enum):
