@@ -2,5 +2,6 @@
 "test" : [
     {"symbol":"TATAMOTORS","exchange":"NSE"}],
 "dev" : [{"symbol":"^NSEI","exchange":"NSE"}],
-"holiday" : [{"date":"^ADANIPOWER","exchange":"NSE"}]
+"holiday" : [{"date":"^ADANIPOWER","exchange":"NSE"}],
+"Google_Service_Account_Credentials": "./tradinglogic-c2be3ed4af4d.json"
 }

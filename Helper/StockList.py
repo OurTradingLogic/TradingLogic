@@ -52,7 +52,7 @@ def getfrompivotpointexcel():
 
 def getfromjsondata(node):
     all_list = [] #empty list
-    f = open(cons.DATA_FOLDER+'Data.json', 'r')
+    f = open(cons.DATA_FOLDER+cons.DATA_JSON, 'r')
     load = json.load(f)
 
     for data in load[node]:    
