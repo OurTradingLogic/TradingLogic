@@ -6,6 +6,54 @@ import Finder.BollingerBand as bband
 import Enum.CommonEnum as enum
 from requests import get
 import Utility.Constant as cons
+import Utility.GSheet as gsheet
+import Helper.JsonReader as jsonHelper
+
+class StockList:
+    global token_ab
+    url = "https://margincalculator.angelbroking.com/OpenAPI_File/files/OpenAPIScripMaster.json"
+    d = get(url).json()
+    token_ab = pd.DataFrame.from_dict(d)
+
+    _exportFrom = enum.ExportFrom.NONE
+    _wks = None
+    def __init__(self, exportFrom):
+        self._exportFrom = exportFrom
+        if exportFrom == enum.ExportFrom.GSHEET:
+            gSheetStockListConfig = jsonHelper.getnodedata('GSheet_StockList')
+            gs = gsheet.GSheet(gSheetStockListConfig['File_Name'])
+            self._wks = gs.sheet(gSheetStockListConfig['Sheet_Name'])
+
+    def get(self):
+        all_list = [] #empty list
+        if self._exportFrom == enum.ExportFrom.GSHEET:
+            records = self._wks.get_all_records()
+            
+            for rows in records:
+                ticket = str(rows['symbol'])
+                market = str(rows['exchange'])
+                #token = self.getTokenInfo(ticket)
+                #list = self.constructlistjson(rows) 
+                list = self.__constructlist(ticket, market)
+                all_list.append(list)
+        return all_list
+
+    def __constructlist(self, symbol, exchange):
+        dict = {"tradingsymbol" : str(symbol),
+                "exchange": str(exchange)}
+        return dict
+
+    def getTokenInfo(self, symbol):
+        if symbol == "ADANIPOWER":
+            symbol = symbol + "-BE"
+        else:
+            symbol = symbol + "-EQ"
+
+        df_script = token_ab.loc[token_df['symbol'] == symbol]
+        if not df_script.empty:
+            return df_script.iat[0,0]
+        else:
+            return "0"
 
 pd.options.mode.chained_assignment = None
 
@@ -20,6 +68,8 @@ def getlistfrom(source):
         all_list = getfromexcel()
     elif source == enum.ExportFrom.JSON:
         all_list = getfromjson()
+    elif source == enum.ExportFrom.GSHEET:
+        all_list = getFromGSheet()
     return all_list
 
 def getfromjson():
@@ -40,6 +90,9 @@ def getfromexcel():
         list = constructlistjson(ticket, str(getTokenInfo(ticket)), str(rows['exchange'])) 
         all_list.append(list)
     return all_list
+
+def getFromGSheet():
+    all_list = [] #empty list
 
 def getfrompivotpointexcel():
     all_list = [] #empty list

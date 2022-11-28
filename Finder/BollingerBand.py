@@ -3,6 +3,8 @@ from enum import Enum
 import math
 from termcolor import colored as cl 
 from numpy.lib.function_base import average
+import Enum.IndicatorEnum as ienum 
+import Enum.CommonEnum as cenum
 
 class BreakOut(Enum):
   UPPER_BB = 1
@@ -109,6 +111,68 @@ def implement_bb_strategy(stock, signal_for):
         temp_prev_line_at = stock['in_line_at'][i]
             
     return buy_price, sell_price, bb_signal, buy_date, sell_date
+
+def find_bb20_break_out(stock):
+    stock['in_line_at'] = np.nan
+    stock['break_out_at'] = np.nan
+    for i in range(len(stock)):
+        break_out_at = ienum.BB_BreakOut.NONE
+        in_line_at = ienum.BB_InLine.NONE
+
+        if np.isnan(stock['sma_20'][i]):
+            continue
+
+        lower_bb = stock['lower20_bb'][i]
+        upper_bb = stock['upper20_bb'][i]
+        sma20 = stock['sma_20'][i]
+        high_price = stock['high'][i]
+        low_price = stock['low'][i]
+
+        if (high_price >= lower_bb >= low_price):
+            in_line_at = ienum.BB_InLine.LOWER_BB_LINE
+        elif (high_price <= upper_bb <= low_price):
+            in_line_at = ienum.BB_InLine.UPPER_BB_LINE
+        elif (high_price < lower_bb):
+            break_out_at = ienum.BB_BreakOut.LOWER_BB
+        elif (low_price > upper_bb):
+            break_out_at = ienum.BB_BreakOut.UPPER_BB
+
+        if (high_price >= sma20 >= low_price):
+            in_line_at = ienum.BB_InLine.SMA_LINE
+        
+        stock['in_line_at'][i] = in_line_at
+        stock['break_out_at'][i] = break_out_at
+
+def implement_bb20_strategy(stock):
+    stock_bb = stock
+
+    find_bb20_break_out(stock_bb)
+    date = stock_bb['date']
+    closeprice = stock_bb['close']
+    sma20 = stock_bb['sma_20']
+    lower_bb = stock_bb['lower20_bb']
+    upper_bb = stock_bb['upper20_bb']
+    stock_bb['signal_bb'] = np.nan
+
+    prev_line_at = ienum.BB_InLine.NONE
+    temp_prev_line_at = ienum.BB_InLine.NONE
+    
+    result = []
+    for i in range(len(closeprice)):
+        if np.isnan(sma20[i]):
+            continue
+        if temp_prev_line_at != ienum.BB_InLine.NONE:
+           prev_line_at = temp_prev_line_at
+        if closeprice[i-1] > lower_bb[i-1] and closeprice[i] < lower_bb[i] and (prev_line_at == ienum.BB_InLine.SMA_LINE):
+            stock_bb['signal_bb'][i] = cenum.Signal.BUY.name
+            result.append({"date": date[i], "close": closeprice[i], "signal": cenum.Signal.BUY.name})
+        elif closeprice[i-1] < upper_bb[i-1] and closeprice[i] > upper_bb[i]:
+            stock_bb['signal_bb'][i] = cenum.Signal.SELL.name
+            result.append({"date": date[i], "close": closeprice[i], "signal": cenum.Signal.SELL.name})
+
+        temp_prev_line_at = stock_bb['in_line_at'][i]
+            
+    return result
 
 def calculateProfit(buy_price, sell_price, bb_signal, stock, ticket):
     profit = 0

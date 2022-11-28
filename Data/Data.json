@@ -3,5 +3,13 @@
     {"symbol":"TATAMOTORS","exchange":"NSE"}],
 "dev" : [{"symbol":"^NSEI","exchange":"NSE"}],
 "holiday" : [{"date":"^ADANIPOWER","exchange":"NSE"}],
-"Google_Service_Account_Credentials": "./tradinglogic-c2be3ed4af4d.json"
+"Google_Service_Account_Credentials": "./tradinglogic-c2be3ed4af4d.json",
+"BollingerBand":
+{"fromday": 90},
+"ExportToGSheet": 
+    {"fromday": 500, "Internal": ""},
+"GSheet_StockList":
+{"File_Name":"StockList","Sheet_Name":"Sheet1"},
+"GSheet_TradingList":
+{"File_Name":"TradingList","Sheet_Name":"Sheet1"}
 }

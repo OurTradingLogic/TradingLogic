@@ -4,6 +4,74 @@ import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 import Utility.Constant as cons
+from collections import defaultdict
+
+class YahooAPI:
+    __auto_adjust = False
+    __progress_bar = True
+    __stocksData = defaultdict(list)
+    def __init__(self, stocklist) -> None:
+        super().__init__()
+        tickets = self.__amdentMarketSuffix(stocklist)
+        self.__tickets = yf.Tickers(tickets)
+
+    def __amdentMarketSuffix(self, stocklist):
+        tickersresult = []
+        for stock in stocklist:
+            tickersresult.append(stock['tradingsymbol'] + ".NS") 
+
+        return tickersresult  
+
+    def __constructData(self, stocksData):
+        for index, stock in stocksData.iterrows():  
+            openList = []   
+            highList = []  
+            lowList = []  
+            closeList = []      
+            for stockname, openprice in stock['Open'].iteritems():
+                openList.append({"StockName": stockname, "OpenPrice":openprice})
+            for stockname, highprice in stock['High'].iteritems():
+                highList.append({"StockName": stockname, "HighPrice":highprice})
+            for stockname, lowprice in stock['Low'].iteritems():
+                lowList.append({"StockName": stockname, "LowPrice":lowprice})
+            for stockname, closeprice in stock['Close'].iteritems():
+                closeList.append({"StockName": stockname, "ClosePrice":closeprice})
+
+            i = 0
+            list_cnt = len(openList)
+            while i < list_cnt:
+                data = {"date":index,"open":openList[i]["OpenPrice"],"high":highList[i]["HighPrice"],"low":lowList[i]["LowPrice"],"close":closeList[i]["ClosePrice"]}
+                self.__stocksData[openList[i]["StockName"]].append(data)
+                i += 1
+        self.__fillNAN()
+
+    def __fillNAN(self):
+        for stockData in self.__stocksData.values():
+            prevValue=np.nan
+            for data in reversed(stockData):
+                closeprice = data["close"]
+                if np.isnan(closeprice) and prevValue != np.nan: 
+                    data['close'] = prevValue
+                if closeprice!= np.nan:   
+                    prevValue = closeprice
+        
+    def GetResult(self):
+        #result = pd.DataFrame.from_dict(self.__stocksData)
+        return self.__stocksData
+
+    def GetStockResult(self, stockname):
+       return self.__stocksData[stockname] 
+
+    def history_period(self, period):
+        data = self.__tickets.history(period)
+        self.__constructData(data)
+        return self
+
+    def history_data(self, start, end, interval):
+        data = self.__tickets.download(start=start, end=end, interval=interval, \
+            auto_adjust=self.__auto_adjust, progress=self.__progress_bar)       
+        self.__constructData(data)
+        return self
 
 def amdentNS(tickers):
     tickersresult = []
@@ -13,7 +81,10 @@ def amdentNS(tickers):
     return tickersresult   
 
 def get_historic_data2(tickers, start, end, interval):
-    tickers_result = amdentNS(tickers)
+    if len(tickers) > 1:
+       tickers_result = amdentNS(tickers) 
+    elif tickers[0] != '^':
+        tickers_result = tickers + '.NS'
 
     data = yf.download(tickers=tickers_result, start=start, end=end, interval=interval)
   
@@ -42,6 +113,7 @@ def get_historic_data2(tickers, start, end, interval):
     frames = [date_df, open_df, high_df, low_df, close_df]
     df = pd.concat(frames, axis = 1, join = 'inner')
     return df
+
 
 def get_historic_data(tickers, start, end, interval):
     if tickers[0] != '^':

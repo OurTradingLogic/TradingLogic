@@ -5,6 +5,14 @@ class ExportFrom(Enum):
   EXCEL = 1
   JSON = 2
   WEB = 3
+  GSHEET = 4
+  NONE = 0 
+
+class ImportTo(Enum):
+  EXCEL = 1
+  JSON = 2
+  WEB = 3
+  GSHEET = 4
   NONE = 0 
 
 class InLine(Enum):

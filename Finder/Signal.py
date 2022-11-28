@@ -1,8 +1,13 @@
 from email.policy import default
 import Enum.CommonEnum as enum
+import Enum.IndicatorEnum as ienum
 import Finder.Pattern as pattern
 import Finder.CandleStick as candle
 import Finder.SupportResistence as sr
+from datetime import datetime, timedelta
+import Finder.BollingerBand as bband
+from collections import defaultdict
+import numpy as np
 
 #https://medium.com/geekculture/candlestick-trading-a-full-guide-on-patterns-and-strategies-b1efcb98675c
 
@@ -106,3 +111,39 @@ def basedOnCandle(openPrice, closePrice):
 
     return signal
 
+class Signal:
+    __signals = defaultdict(list)
+    #def __init__(self): 
+        #self._signals = defaultdict(list)
+
+    def __del__(self):
+        self.__signals = None
+
+    def GetAllSignals(self):
+        return self.__signals
+
+    def __constructindicatoroutput(self, stockname, indicator, signal, date, price):
+        signal = {"Tool": indicator,"Signal" : signal, "Date": date, "Price": round(price,2)}
+        if not np.isnan(price):
+            self.__signals[stockname].append(signal)
+
+        return signal
+
+    def basedOnBollingerBand(self, stockname, stockData, fromDay):
+        bbResult = bband.implement_bb20_strategy(stockData)
+        result = {}
+
+        if len(bbResult) > 0: 
+            last_date = bbResult[len(bbResult)-1]['date']
+            #last_buy_date = datetime.strptime(temp_last_buy_date, "%Y-%m-%d")
+            #last_buy_date = datetime.now().strftime("%Y-%m-%d")
+            last_signal_date = last_date.strftime("%Y-%m-%d")
+            temp_date = datetime.now() - timedelta(days=fromDay)
+            from_date = temp_date.strftime("%Y-%m-%d")
+            #today_date = datetime.strptime((datetime.now() - timedelta(days=116)), "%d%m%y")
+            
+            #if last_signal_date > from_date: 
+            result = self.__constructindicatoroutput(stockname, ienum.Indicators.BBAND.name, \
+                bbResult[len(bbResult)-1]['signal'], last_signal_date, bbResult[len(bbResult)-1]['close'])   
+
+        return result
