@@ -6,6 +6,7 @@ import Finder.CandleStick as candle
 import Finder.SupportResistence as sr
 from datetime import datetime, timedelta
 import Finder.BollingerBand as bband
+import Finder.PeekHighLow as peekHL
 from collections import defaultdict
 import numpy as np
 
@@ -129,21 +130,39 @@ class Signal:
 
         return signal
 
-    def basedOnBollingerBand(self, stockname, stockData, fromDay):
+    def basedOnBollingerBand(self, stockname, stockData):
         bbResult = bband.implement_bb20_strategy(stockData)
         result = {}
 
         if len(bbResult) > 0: 
             last_date = bbResult[len(bbResult)-1]['date']
-            #last_buy_date = datetime.strptime(temp_last_buy_date, "%Y-%m-%d")
-            #last_buy_date = datetime.now().strftime("%Y-%m-%d")
             last_signal_date = last_date.strftime("%Y-%m-%d")
-            temp_date = datetime.now() - timedelta(days=fromDay)
-            from_date = temp_date.strftime("%Y-%m-%d")
-            #today_date = datetime.strptime((datetime.now() - timedelta(days=116)), "%d%m%y")
-            
-            #if last_signal_date > from_date: 
             result = self.__constructindicatoroutput(stockname, ienum.Indicators.BBAND.name, \
                 bbResult[len(bbResult)-1]['signal'], last_signal_date, bbResult[len(bbResult)-1]['close'])   
+
+        return result
+
+    def basedOnPeekHighLowTrend(self, stockname, stockData, price = 0):
+        peekHighLow = peekHL.PeekHighLow(stockData)
+       
+        if price == 0:
+            price = stockData['close'][len(stockData)-1]
+            date = stockData['date'][len(stockData)-1]
+        else:
+            date = datetime.now()
+
+        peekHighLowTrendResult = peekHighLow.findCurrentTrend(price)
+
+        result = {}
+
+        if peekHighLowTrendResult != enum.Trend.NONE: 
+            signal = enum.Signal.NONE
+            if peekHighLowTrendResult == enum.Trend.UP:
+                signal = enum.Signal.BUY
+            elif peekHighLowTrendResult == enum.Trend.DOWN:
+                signal = enum.Signal.SELL
+            signal_date = date.strftime("%Y-%m-%d")
+            result = self.__constructindicatoroutput(stockname, ienum.Indicators.TREND.name, \
+                signal.name, signal_date, price)   
 
         return result

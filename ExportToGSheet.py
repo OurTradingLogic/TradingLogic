@@ -1,7 +1,5 @@
-import Utility.GSheet as gsheet
 import Helper.TradingList as tlist
 import Enum.CommonEnum as cenum
-import Utility.Constant as cons
 import pandas as pd
 import Helper.StockList as slist
 import Utility.YahooAPI as yapi
@@ -9,56 +7,62 @@ from datetime import datetime, timedelta
 import Helper.JsonReader as jsonHelper
 import Finder.Indicators as tools
 import Finder.Signal as snal
-from collections import defaultdict
-import Finder.BollingerBand as bband
+import Finder.PeekHighLow as peekHighLow
 
-#Connect google sheet with help of goole service account setup
-#gs = gsheet.GSheet(cons.GSHEET_FILE1)
-
-#Get specific sheet name
-#wks = gs.sheet(cons.GS_BBAND)
-
-#wks.update('A1', 'Welcome to all')
-
-#trade_list = tlist.getbollingerbandtradinglist(cenum.ExportFrom.EXCEL)
-
-#df = pd.DataFrame(trade_list)
-
-#wks.update([df.columns.values.tolist()] + df.values.tolist())
-
-#Clear memory
-#gs.__del__()
-
-bollingerBandConfig = jsonHelper.getnodedata('BollingerBand')
-fromdayBB = bollingerBandConfig['fromday']
-
+#Get it from Config
 exportToGSheetConfig = jsonHelper.getnodedata('ExportToGSheet')
 days = exportToGSheetConfig['fromday']
-startdate = datetime.now() - timedelta(days)
+#startdate = datetime.now() - timedelta(days)
+startdate = datetime.now() - timedelta(365*36) - timedelta(20)
 enddate = datetime.now()
 
 #Get Stock List i/p
 stockList = slist.StockList(cenum.ExportFrom.GSHEET).get()
 
-yahooAPI = yapi.YahooAPI(stockList)
-stocks = yahooAPI.history_data(start=startdate, end=enddate, interval="1wk").GetResult()
+yahooAPI1 = yapi.YahooAPI(stockList)
+oneWeekData = yahooAPI1.history_data(start=startdate, end=enddate, interval="1wk").GetResult()
+
+yahooAPI2 = yapi.YahooAPI(stockList)
+oneMonthData = yahooAPI2.history_data(start=startdate, end=enddate, interval="1mo").GetResult()
 
 indicator = tools.Indicator()
 osignal = snal.Signal()
 
-for stockname, data in stocks.items():
+for stockname, data in oneWeekData.items():
     df = pd.DataFrame.from_dict(data)
     df['sma_20'] = indicator.sma(df.close, 20)
     df['upper20_bb'], df['lower20_bb'] = indicator.bb(df['close'], df['sma_20'], 20)
     
-    osignal.basedOnBollingerBand(stockname, df, fromdayBB)
+    osignal.basedOnBollingerBand(stockname, df)
 
-print("....................")
+for stockname, data in oneMonthData.items():
+    df = pd.DataFrame.from_dict(data)
+
+    sr_call = peekHighLow.PeekHighLow(df)
+    list = sr_call.getPeekHighLowWithSRPoints()
+    firstSupportPrice =sr_call.firstSupportPrice()
+    firstResitencePrice = sr_call.firstResitencePrice()
+    highestHitResistenceLevel=sr_call.highestHitResistenceLevelPrice()
+    highestHitSupportLevel=sr_call.highestHitSupportLevelPrice()
+    highestPrice=sr_call.highestPrice()
+    lowestPrice=sr_call.lowestPrice()
+    lastRsesitencePrice=sr_call.lastRsesitencePrice()
+    lastSupportPrice=sr_call.lastSupportPrice()
+    print("firstSupportPrice = " + str(firstSupportPrice))
+    print("firstResitencePrice = " + str(firstResitencePrice))
+    print("highestHitResistenceLevel = " + str(highestHitResistenceLevel))
+    print("highestHitSupportLevel = " + str(highestHitSupportLevel))
+    print("highestPrice = " + str(highestPrice))
+    print("lowestPrice = " + str(lowestPrice))
+    print("lastRsesitencePrice = " + str(lastRsesitencePrice))
+    print("lastSupportPrice = " + str(lastSupportPrice))
+
+    osignal.basedOnPeekHighLowTrend(stockname, df)
+
+print("**************Exporting**************")
 tradingList = osignal.GetAllSignals()
 #Write Trading List o/p
 stockList = tlist.TradingList(cenum.ImportTo.GSHEET).write(tradingList)
 
 osignal.__del__()
-
-
 print("**************Final*****************")

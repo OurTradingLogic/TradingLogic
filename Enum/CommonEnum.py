@@ -15,6 +15,16 @@ class ImportTo(Enum):
   GSHEET = 4
   NONE = 0 
 
+class PeekLevel(Enum):
+  HIGH = 1
+  LOW = 2
+  NONE = 0
+
+class SRLevel(Enum):
+  SUPPORT = 1
+  RESISTENCE = 2
+  NONE = 0
+
 class InLine(Enum):
   SUPPORT = 1
   RESISTENCE = 2
@@ -35,6 +45,7 @@ class Trend(Enum):
   UP = 1
   DOWN = 2
   STRAIGHT = 3
+  REVERSE = 4
   NONE = 0
 
 class Position(Enum):

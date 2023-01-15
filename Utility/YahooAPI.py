@@ -6,14 +6,14 @@ from datetime import datetime, timedelta
 import Utility.Constant as cons
 from collections import defaultdict
 
-class YahooAPI:
-    __auto_adjust = False
-    __progress_bar = True
-    __stocksData = defaultdict(list)
+class YahooAPI:  
     def __init__(self, stocklist) -> None:
         super().__init__()
-        tickets = self.__amdentMarketSuffix(stocklist)
-        self.__tickets = yf.Tickers(tickets)
+        self.__auto_adjust = False
+        self.__progress_bar = True
+        self.__stocksData = defaultdict(list)
+        self.__ticketList = self.__amdentMarketSuffix(stocklist)
+        self.__tickets = yf.Tickers(self.__ticketList)
 
     def __amdentMarketSuffix(self, stocklist):
         tickersresult = []
@@ -67,10 +67,23 @@ class YahooAPI:
         self.__constructData(data)
         return self
 
+    def __constructSingleStockData(self, data, stockName):      
+        for index, row in data.iterrows():
+            data = {"date":index,"open":row['Open'],"high":row['High'],"low":row['Low'],"close":row['Close']}
+            self.__stocksData[stockName].append(data)
+        
+        self.__fillNAN()
+
     def history_data(self, start, end, interval):
-        data = self.__tickets.download(start=start, end=end, interval=interval, \
-            auto_adjust=self.__auto_adjust, progress=self.__progress_bar)       
-        self.__constructData(data)
+        if len(self.__ticketList) == 1:
+            data = yf.download(tickers=self.__ticketList, start=start, end=end, interval=interval, \
+                auto_adjust=self.__auto_adjust, progress=self.__progress_bar)  
+            self.__constructSingleStockData(data, self.__ticketList[0])         
+        else:
+            data = self.__tickets.download(start=start, end=end, interval=interval, \
+                auto_adjust=self.__auto_adjust, progress=self.__progress_bar)  
+            self.__constructData(data)
+        
         return self
 
 def amdentNS(tickers):
