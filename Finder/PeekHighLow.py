@@ -202,7 +202,7 @@ class PeekHighLow:
     def highestHitSupportLevelPrice(self):
         self.__loadSRLevel_list()
         supportList = [item for item in self.__SRLevel_list if item.SRLevel == enum.SRLevel.SUPPORT] 
-        #supportList.sort(key=attrgetter('SRName'))
+        supportList.sort(key=attrgetter('SRName'))
 
         curr_count = 0
         prev_count = 0
@@ -227,7 +227,7 @@ class PeekHighLow:
     def highestHitResistenceLevelPrice(self):
         self.__loadSRLevel_list()
         resistenceList = [item for item in self.__SRLevel_list if item.SRLevel == enum.SRLevel.RESISTENCE] 
-        #resistenceList.sort(key=attrgetter('SRName'))
+        resistenceList.sort(key=attrgetter('SRName'))
 
         curr_count = 0
         prev_count = 0
