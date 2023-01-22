@@ -1,11 +1,12 @@
 import Enum.CommonEnum as cenum
 
 class PeekHighLowModel: 
-    def __init__(self, highPrice, lowPrice, closePrice, level, date): 
+    def __init__(self, highPrice, lowPrice, closePrice, level, date, movingAverage20 = 0): 
         self.PeekLevel = level
         self.LowPrice = lowPrice
         self.HighPrice = highPrice
         self.ClosePrice = closePrice
+        self.SMA_20 = movingAverage20
         self.Date = date
 
 class PeekHighLowSRLevelModel:

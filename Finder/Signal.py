@@ -166,3 +166,53 @@ class Signal:
                 signal.name, signal_date, price)   
 
         return result
+
+    def basedOnPeekHighLowSR(self, stockname, stockData, price = 0):
+        peekHighLow = peekHL.PeekHighLow(stockData)
+        peekHighLowSR = peekHighLow.getLastPeekSRLevel()
+       
+        if price == 0:
+            price = stockData['close'][len(stockData)-1]
+            date = stockData['date'][len(stockData)-1]
+        else:
+            date = datetime.now()
+
+        signal = enum.Signal.NONE
+        if peekHighLowSR.SRLevel == enum.SRLevel.SUPPORT:
+            if price > peekHighLowSR.HighPrice:
+                signal = enum.Signal.BUY
+        elif peekHighLowSR.SRLevel == enum.SRLevel.RESISTENCE:  
+            if price < peekHighLowSR.LowPrice:
+                signal = enum.Signal.SELL
+
+        result = {}
+        signal_date = date.strftime("%Y-%m-%d")
+        result = self.__constructindicatoroutput(stockname, ienum.Indicators.SUPPORTRESISTENCE.name, \
+            signal.name, signal_date, price)   
+
+        return result
+
+    def basedOnMovingAverage20(self, stockname, stockData, price = 0):
+        peekHighLow = peekHL.PeekHighLow(stockData)
+        lastPeekHLLevel = peekHighLow.getLastPeekHLLevel()
+
+        if price == 0:
+            price = stockData['close'][len(stockData)-1]
+            date = stockData['date'][len(stockData)-1]
+        else:
+            date = datetime.now()
+
+        sma_20 = stockData['sma_20'][len(stockData)-1]
+        signal = enum.Signal.NONE
+        if price > sma_20 and lastPeekHLLevel.SMA_20 > lastPeekHLLevel.LowPrice:
+            signal = enum.Signal.BUY
+        elif price < sma_20 and lastPeekHLLevel.SMA_20 < lastPeekHLLevel.HighPrice:
+            signal = enum.Signal.SELL
+
+        result = {}
+
+        signal_date = date.strftime("%Y-%m-%d")
+        result = self.__constructindicatoroutput(stockname, ienum.Indicators.MOVINGAVERAGE20.name, \
+            signal.name, signal_date, price) 
+
+        return result

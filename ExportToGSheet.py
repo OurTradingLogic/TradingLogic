@@ -30,34 +30,43 @@ osignal = snal.Signal()
 
 for stockname, data in oneWeekData.items():
     df = pd.DataFrame.from_dict(data)
+    if df['close'].isnull().all():
+        continue
     df['sma_20'] = indicator.sma(df.close, 20)
     df['upper20_bb'], df['lower20_bb'] = indicator.bb(df['close'], df['sma_20'], 20)
-    
+    df['rsi_14'] = indicator.rsi(df['close'], 14)
+
     osignal.basedOnBollingerBand(stockname, df)
+    osignal.basedOnMovingAverage20(stockname, df)
 
 for stockname, data in oneMonthData.items():
     df = pd.DataFrame.from_dict(data)
+    if df['close'].isnull().all():
+        continue
+    df['sma_20'] = indicator.sma(df.close, 20)
+    df['upper20_bb'], df['lower20_bb'] = indicator.bb(df['close'], df['sma_20'], 20)
 
-    sr_call = peekHighLow.PeekHighLow(df)
-    list = sr_call.getPeekHighLowWithSRPoints()
-    firstSupportPrice =sr_call.firstSupportPrice()
-    firstResitencePrice = sr_call.firstResitencePrice()
-    highestHitResistenceLevel=sr_call.highestHitResistenceLevelPrice()
-    highestHitSupportLevel=sr_call.highestHitSupportLevelPrice()
-    highestPrice=sr_call.highestPrice()
-    lowestPrice=sr_call.lowestPrice()
-    lastRsesitencePrice=sr_call.lastRsesitencePrice()
-    lastSupportPrice=sr_call.lastSupportPrice()
-    print("firstSupportPrice = " + str(firstSupportPrice))
-    print("firstResitencePrice = " + str(firstResitencePrice))
-    print("highestHitResistenceLevel = " + str(highestHitResistenceLevel))
-    print("highestHitSupportLevel = " + str(highestHitSupportLevel))
-    print("highestPrice = " + str(highestPrice))
-    print("lowestPrice = " + str(lowestPrice))
-    print("lastRsesitencePrice = " + str(lastRsesitencePrice))
-    print("lastSupportPrice = " + str(lastSupportPrice))
+    # sr_call = peekHighLow.PeekHighLow(df)
+    # list = sr_call.getPeekHighLowWithSRPoints()
+    # firstSupportPrice =sr_call.firstSupportPrice()
+    # firstResitencePrice = sr_call.firstResitencePrice()
+    # highestHitResistenceLevel=sr_call.highestHitResistenceLevelPrice()
+    # highestHitSupportLevel=sr_call.highestHitSupportLevelPrice()
+    # highestPrice=sr_call.highestPrice()
+    # lowestPrice=sr_call.lowestPrice()
+    # lastRsesitencePrice=sr_call.lastRsesitencePrice()
+    # lastSupportPrice=sr_call.lastSupportPrice()
+    # print("firstSupportPrice = " + str(firstSupportPrice))
+    # print("firstResitencePrice = " + str(firstResitencePrice))
+    # print("highestHitResistenceLevel = " + str(highestHitResistenceLevel))
+    # print("highestHitSupportLevel = " + str(highestHitSupportLevel))
+    # print("highestPrice = " + str(highestPrice))
+    # print("lowestPrice = " + str(lowestPrice))
+    # print("lastRsesitencePrice = " + str(lastRsesitencePrice))
+    # print("lastSupportPrice = " + str(lastSupportPrice))
 
     osignal.basedOnPeekHighLowTrend(stockname, df)
+    osignal.basedOnPeekHighLowSR(stockname, df)
 
 print("**************Exporting**************")
 tradingList = osignal.GetAllSignals()

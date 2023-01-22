@@ -27,33 +27,62 @@ class YahooAPI:
             openList = []   
             highList = []  
             lowList = []  
-            closeList = []      
+            closeList = []  
+                          
             for stockname, openprice in stock['Open'].iteritems():
                 openList.append({"StockName": stockname, "OpenPrice":openprice})
+
             for stockname, highprice in stock['High'].iteritems():
                 highList.append({"StockName": stockname, "HighPrice":highprice})
+
             for stockname, lowprice in stock['Low'].iteritems():
                 lowList.append({"StockName": stockname, "LowPrice":lowprice})
+
             for stockname, closeprice in stock['Close'].iteritems():
                 closeList.append({"StockName": stockname, "ClosePrice":closeprice})
 
             i = 0
             list_cnt = len(openList)
             while i < list_cnt:
+                if np.isnan(openList[i]["OpenPrice"]):
+                    i += 1
+                    continue
                 data = {"date":index,"open":openList[i]["OpenPrice"],"high":highList[i]["HighPrice"],"low":lowList[i]["LowPrice"],"close":closeList[i]["ClosePrice"]}
                 self.__stocksData[openList[i]["StockName"]].append(data)
                 i += 1
         self.__fillNAN()
 
     def __fillNAN(self):
+        #if self.__stocksData.isnull().values.any():
         for stockData in self.__stocksData.values():
-            prevValue=np.nan
+            prevCloseValue=np.nan
+            prevHighValue=np.nan
+            prevLowValue=np.nan
+            prevOpenValue=np.nan
             for data in reversed(stockData):
                 closeprice = data["close"]
-                if np.isnan(closeprice) and prevValue != np.nan: 
-                    data['close'] = prevValue
-                if closeprice!= np.nan:   
-                    prevValue = closeprice
+                if np.isnan(closeprice) and (prevCloseValue != np.nan or np.isnan(prevCloseValue)): 
+                    data['close'] = prevCloseValue
+                if closeprice!= np.nan or not np.isnan(closeprice):
+                    prevCloseValue = closeprice
+
+                highprice = data["high"]
+                if np.isnan(highprice) and (prevHighValue != np.nan or np.isnan(prevHighValue)): 
+                    data['high'] = prevHighValue
+                if highprice!= np.nan or not np.isnan(highprice):
+                    prevHighValue = highprice
+
+                lowprice = data["low"]
+                if np.isnan(lowprice) and (prevLowValue != np.nan or np.isnan(prevLowValue)): 
+                    data['low'] = prevLowValue
+                if lowprice!= np.nan or not np.isnan(lowprice):
+                    prevLowValue = lowprice
+
+                openprice = data["open"]
+                if np.isnan(openprice) and (prevOpenValue != np.nan or np.isnan(prevOpenValue)): 
+                    data['open'] = prevOpenValue
+                if openprice!= np.nan or not np.isnan(openprice):
+                    prevOpenValue = openprice
         
     def GetResult(self):
         #result = pd.DataFrame.from_dict(self.__stocksData)

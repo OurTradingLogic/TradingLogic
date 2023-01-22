@@ -49,6 +49,7 @@ class PeekHighLow:
             high_price = data['high'][i]
             low_price = data['low'][i]
             date = data['date'][i]
+            movingAverage20 = data['sma_20'][i]
 
             if i > 0:
                 trend = candle.getTrend(prev_open_price, prev_close_price, close_price)
@@ -67,10 +68,10 @@ class PeekHighLow:
 
             if trendContinueCnt == self.PEEK_HIGH_LOW_TREND_COUNT:
                 if trend == enum.Trend.UP:
-                    hl_list.append(fmodel.PeekHighLowModel(hl_high_price, hl_low_price, hl_close_price, enum.PeekLevel.LOW, hl_date))
+                    hl_list.append(fmodel.PeekHighLowModel(hl_high_price, hl_low_price, hl_close_price, enum.PeekLevel.LOW, hl_date, movingAverage20))
                     #print("Added Lowest Price " + str(hl_low_price) + " Date = " + str(hl_date))
                 elif trend == enum.Trend.DOWN:
-                    hl_list.append(fmodel.PeekHighLowModel(hl_high_price, hl_low_price, hl_close_price, enum.PeekLevel.HIGH, hl_date))
+                    hl_list.append(fmodel.PeekHighLowModel(hl_high_price, hl_low_price, hl_close_price, enum.PeekLevel.HIGH, hl_date, movingAverage20))
                     #print("Added Highest Price " + str(hl_high_price) + " Date = " + str(hl_date))
             
             if open_price == np.nan:
@@ -261,5 +262,83 @@ class PeekHighLow:
                 result = enum.Trend.DOWN 
             else: result = enum.Trend.REVERSE 
         else: result = enum.Trend.STRAIGHT 
+        
+        return result 
+
+    def getLastPeekHLLevel(self):
+        hlLevel = self.__hl_list[-1]
+        return hlLevel
+
+    def getLastPeekSRLevel(self):
+        self.__loadSRLevel_list()
+        srLevel = self.__SRLevel_list[-1]
+        return srLevel
+
+    def getMarketTrendLine(self, checkTrendCount = 3):
+        result = enum.Trend.NONE
+        hPeekList =  [item for item in self.__hl_list if item.PeekLevel == enum.PeekLevel.HIGH] 
+        lPeekList = [item for item in self.__hl_list if item.PeekLevel == enum.PeekLevel.LOW] 
+
+        highPeekTrend = enum.Trend.NONE
+        lowPeekTrend = enum.Trend.NONE
+
+        prevHighPeekTrend = enum.Trend.NONE
+        iCnt = 0
+        prevPeek = None
+        for hPeek in hPeekList:
+            iCnt+=1
+            
+            if prevPeek != None:
+                if prevPeek.HighPrice < hPeek.HighPrice:
+                    if prevHighPeekTrend == enum.Trend.DOWN:
+                        prevHighPeekTrend = enum.Trend.NONE
+                    else:
+                        prevHighPeekTrend = enum.Trend.UP
+                elif prevPeek.HighPrice > hPeek.HighPrice:
+                    if prevHighPeekTrend == enum.Trend.UP:
+                        prevHighPeekTrend = enum.Trend.NONE
+                    else:
+                        prevHighPeekTrend = enum.Trend.DOWN
+                else:
+                    prevHighPeekTrend = enum.Trend.STRAIGHT
+
+                if prevHighPeekTrend == enum.Trend.NONE:
+                    break
+
+                if iCnt == checkTrendCount:
+                    highPeekTrend = prevHighPeekTrend
+
+            prevPeek = hPeek
+
+        prevLowPeekTrend = enum.Trend.NONE
+        iCnt = 0
+        prevPeek = None
+        for lPeek in lPeekList:
+            iCnt+=1
+            
+            if prevPeek != None:
+                if prevPeek.LowPrice < lPeek.LowPrice:
+                    if prevLowPeekTrend == enum.Trend.DOWN:
+                        prevLowPeekTrend = enum.Trend.NONE
+                    else:
+                        prevLowPeekTrend = enum.Trend.UP
+                elif prevPeek.LowPrice > lPeek.LowPrice:
+                    if prevLowPeekTrend == enum.Trend.UP:
+                        prevLowPeekTrend = enum.Trend.NONE
+                    else:
+                        prevLowPeekTrend = enum.Trend.DOWN
+                else:
+                    prevLowPeekTrend = enum.Trend.STRAIGHT
+
+                if prevLowPeekTrend == enum.Trend.NONE:
+                    break
+
+                if iCnt == checkTrendCount:
+                    lowPeekTrend = prevLowPeekTrend
+
+            prevPeek = lPeek
+
+        if highPeekTrend == lowPeekTrend:
+            result = highPeekTrend
         
         return result 

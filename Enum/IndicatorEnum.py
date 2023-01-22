@@ -4,6 +4,8 @@ from lib2to3.pgen2.token import EQUAL
 class Indicators(Enum):
     BBAND = 1
     TREND = 2
+    SUPPORTRESISTENCE = 3
+    MOVINGAVERAGE20 = 4
     NONE = 0
 
 class BB_BreakOut(Enum):
