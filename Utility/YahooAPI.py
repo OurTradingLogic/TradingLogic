@@ -52,13 +52,17 @@ class YahooAPI:
                 i += 1
         self.__fillNAN()
 
-    def __fillNAN(self):
-        #if self.__stocksData.isnull().values.any():
+    def __fillNAN(self):     
         for stockData in self.__stocksData.values():
             prevCloseValue=np.nan
             prevHighValue=np.nan
             prevLowValue=np.nan
-            prevOpenValue=np.nan
+            prevOpenValue=np.nan 
+            haveNANValue = [item for item in stockData if np.isnan(item["close"])\
+                or np.isnan(item["high"]) or np.isnan(item["low"])\
+                or np.isnan(item["open"])] 
+            if len(haveNANValue) == 0:
+                continue
             for data in reversed(stockData):
                 closeprice = data["close"]
                 if np.isnan(closeprice) and (prevCloseValue != np.nan or np.isnan(prevCloseValue)): 
@@ -83,7 +87,7 @@ class YahooAPI:
                     data['open'] = prevOpenValue
                 if openprice!= np.nan or not np.isnan(openprice):
                     prevOpenValue = openprice
-        
+    
     def GetResult(self):
         #result = pd.DataFrame.from_dict(self.__stocksData)
         return self.__stocksData

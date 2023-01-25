@@ -35,38 +35,25 @@ for stockname, data in oneWeekData.items():
     df['sma_20'] = indicator.sma(df.close, 20)
     df['upper20_bb'], df['lower20_bb'] = indicator.bb(df['close'], df['sma_20'], 20)
     df['rsi_14'] = indicator.rsi(df['close'], 14)
+    peekHL = peekHighLow.PeekHighLow(df)
 
     osignal.basedOnBollingerBand(stockname, df)
-    osignal.basedOnMovingAverage20(stockname, df)
+    osignal.basedOnMovingAverage20(stockname, df, peekHL.getLastPeekHLLevel())
+    peekHL.__del__()
 
 for stockname, data in oneMonthData.items():
     df = pd.DataFrame.from_dict(data)
     if df['close'].isnull().all():
         continue
+
+    latestprice = df['close'][len(df)-1]
     df['sma_20'] = indicator.sma(df.close, 20)
     df['upper20_bb'], df['lower20_bb'] = indicator.bb(df['close'], df['sma_20'], 20)
+    peekHL = peekHighLow.PeekHighLow(df)
 
-    # sr_call = peekHighLow.PeekHighLow(df)
-    # list = sr_call.getPeekHighLowWithSRPoints()
-    # firstSupportPrice =sr_call.firstSupportPrice()
-    # firstResitencePrice = sr_call.firstResitencePrice()
-    # highestHitResistenceLevel=sr_call.highestHitResistenceLevelPrice()
-    # highestHitSupportLevel=sr_call.highestHitSupportLevelPrice()
-    # highestPrice=sr_call.highestPrice()
-    # lowestPrice=sr_call.lowestPrice()
-    # lastRsesitencePrice=sr_call.lastRsesitencePrice()
-    # lastSupportPrice=sr_call.lastSupportPrice()
-    # print("firstSupportPrice = " + str(firstSupportPrice))
-    # print("firstResitencePrice = " + str(firstResitencePrice))
-    # print("highestHitResistenceLevel = " + str(highestHitResistenceLevel))
-    # print("highestHitSupportLevel = " + str(highestHitSupportLevel))
-    # print("highestPrice = " + str(highestPrice))
-    # print("lowestPrice = " + str(lowestPrice))
-    # print("lastRsesitencePrice = " + str(lastRsesitencePrice))
-    # print("lastSupportPrice = " + str(lastSupportPrice))
-
-    osignal.basedOnPeekHighLowTrend(stockname, df)
-    osignal.basedOnPeekHighLowSR(stockname, df)
+    osignal.basedOnPeekHighLowTrend(stockname, df, peekHL.findCurrentTrend(latestprice))
+    osignal.basedOnPeekHighLowSR(stockname, df, peekHL.getLastPeekSRLevel())
+    peekHL.__del__()
 
 print("**************Exporting**************")
 tradingList = osignal.GetAllSignals()

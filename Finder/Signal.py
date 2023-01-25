@@ -142,16 +142,9 @@ class Signal:
 
         return result
 
-    def basedOnPeekHighLowTrend(self, stockname, stockData, price = 0):
-        peekHighLow = peekHL.PeekHighLow(stockData)
-       
-        if price == 0:
-            price = stockData['close'][len(stockData)-1]
-            date = stockData['date'][len(stockData)-1]
-        else:
-            date = datetime.now()
-
-        peekHighLowTrendResult = peekHighLow.findCurrentTrend(price)
+    def basedOnPeekHighLowTrend(self, stockname, stockData, peekHighLowTrendResult):
+        latestPrice = stockData['close'][len(stockData)-1]
+        latestDate = stockData['date'][len(stockData)-1]
 
         result = {}
 
@@ -161,58 +154,47 @@ class Signal:
                 signal = enum.Signal.BUY
             elif peekHighLowTrendResult == enum.Trend.DOWN:
                 signal = enum.Signal.SELL
-            signal_date = date.strftime("%Y-%m-%d")
+            
+            signal_date = latestDate.strftime("%Y-%m-%d")           
             result = self.__constructindicatoroutput(stockname, ienum.Indicators.TREND.name, \
-                signal.name, signal_date, price)   
+                signal.name, signal_date, latestPrice)   
 
         return result
 
-    def basedOnPeekHighLowSR(self, stockname, stockData, price = 0):
-        peekHighLow = peekHL.PeekHighLow(stockData)
-        peekHighLowSR = peekHighLow.getLastPeekSRLevel()
-       
-        if price == 0:
-            price = stockData['close'][len(stockData)-1]
-            date = stockData['date'][len(stockData)-1]
-        else:
-            date = datetime.now()
+    def basedOnPeekHighLowSR(self, stockname, stockData, peekHighLowSR):
+        latestPrice = stockData['close'][len(stockData)-1]
+        latestDate = stockData['date'][len(stockData)-1]
 
         signal = enum.Signal.NONE
         if peekHighLowSR.SRLevel == enum.SRLevel.SUPPORT:
-            if price > peekHighLowSR.HighPrice:
+            if latestPrice > peekHighLowSR.HighPrice:
                 signal = enum.Signal.BUY
         elif peekHighLowSR.SRLevel == enum.SRLevel.RESISTENCE:  
-            if price < peekHighLowSR.LowPrice:
+            if latestPrice < peekHighLowSR.LowPrice:
                 signal = enum.Signal.SELL
 
         result = {}
-        signal_date = date.strftime("%Y-%m-%d")
+        signal_date = latestDate.strftime("%Y-%m-%d")
         result = self.__constructindicatoroutput(stockname, ienum.Indicators.SUPPORTRESISTENCE.name, \
-            signal.name, signal_date, price)   
+            signal.name, signal_date, latestPrice)   
 
         return result
 
-    def basedOnMovingAverage20(self, stockname, stockData, price = 0):
-        peekHighLow = peekHL.PeekHighLow(stockData)
-        lastPeekHLLevel = peekHighLow.getLastPeekHLLevel()
-
-        if price == 0:
-            price = stockData['close'][len(stockData)-1]
-            date = stockData['date'][len(stockData)-1]
-        else:
-            date = datetime.now()
+    def basedOnMovingAverage20(self, stockname, stockData, lastPeekHLLevel):
+        latestPrice = stockData['close'][len(stockData)-1]
+        latestDate = stockData['date'][len(stockData)-1]
 
         sma_20 = stockData['sma_20'][len(stockData)-1]
         signal = enum.Signal.NONE
-        if price > sma_20 and lastPeekHLLevel.SMA_20 > lastPeekHLLevel.LowPrice:
+        if latestPrice > sma_20 and lastPeekHLLevel.SMA_20 > lastPeekHLLevel.LowPrice:
             signal = enum.Signal.BUY
-        elif price < sma_20 and lastPeekHLLevel.SMA_20 < lastPeekHLLevel.HighPrice:
+        elif latestPrice < sma_20 and lastPeekHLLevel.SMA_20 < lastPeekHLLevel.HighPrice:
             signal = enum.Signal.SELL
 
         result = {}
 
-        signal_date = date.strftime("%Y-%m-%d")
+        signal_date = latestDate.strftime("%Y-%m-%d")
         result = self.__constructindicatoroutput(stockname, ienum.Indicators.MOVINGAVERAGE20.name, \
-            signal.name, signal_date, price) 
+            signal.name, signal_date, latestPrice) 
 
         return result
