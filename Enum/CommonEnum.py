@@ -25,6 +25,16 @@ class SRLevel(Enum):
   RESISTENCE = 2
   NONE = 0
 
+class DivergenceLevel(Enum):
+  BULLISH = 1
+  BEARISH = 2
+  NONE = 0
+
+class OverBoughtSold(Enum):
+  OVERBOUGHT = 1
+  OVERSOLD = 2
+  NONE = 0
+
 class InLine(Enum):
   SUPPORT = 1
   RESISTENCE = 2

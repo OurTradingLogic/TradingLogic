@@ -28,6 +28,7 @@ class YahooAPI:
             highList = []  
             lowList = []  
             closeList = []  
+            adjcloseList = []  
                           
             for stockname, openprice in stock['Open'].iteritems():
                 openList.append({"StockName": stockname, "OpenPrice":openprice})
@@ -41,13 +42,18 @@ class YahooAPI:
             for stockname, closeprice in stock['Close'].iteritems():
                 closeList.append({"StockName": stockname, "ClosePrice":closeprice})
 
+            #Not yet used. Adj Close values. If it not required, we can remove
+            for stockname, adjcloseprice in stock['Adj Close'].iteritems():
+                adjcloseList.append({"StockName": stockname, "AdjClosePrice":adjcloseprice})
+
             i = 0
             list_cnt = len(openList)
             while i < list_cnt:
                 if np.isnan(openList[i]["OpenPrice"]):
                     i += 1
                     continue
-                data = {"date":index,"open":openList[i]["OpenPrice"],"high":highList[i]["HighPrice"],"low":lowList[i]["LowPrice"],"close":closeList[i]["ClosePrice"]}
+                data = {"date":index,"open":openList[i]["OpenPrice"],"high":highList[i]["HighPrice"],"low":lowList[i]["LowPrice"],\
+                    "close":closeList[i]["ClosePrice"],"adjclose":adjcloseList[i]["AdjClosePrice"]}
                 self.__stocksData[openList[i]["StockName"]].append(data)
                 i += 1
         self.__fillNAN()

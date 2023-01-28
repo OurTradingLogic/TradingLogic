@@ -8,9 +8,8 @@ import itertools
 from datetime import datetime, timedelta
 
 class PeekHighLow:
-    PEEK_HIGH_LOW_TREND_COUNT = 2
-
-    def __init__(self,data):
+    def __init__(self,data, trendCountCheck = 2):
+        self.PEEK_HIGH_LOW_TREND_COUNT = trendCountCheck
         self.__hl_list = []
         self.__load(data)
         self.__srLevel_loaded = False

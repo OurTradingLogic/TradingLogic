@@ -21,5 +21,23 @@ class PeekHighLowSRLevelModel:
         self.PeekLevel = peekHighLow.PeekLevel
         self.Date = peekHighLow.Date
 
+class PeekHighLowRSIModel:
+    def __init__(self, closePrice, level, date, rsi, overBoughtSold = cenum.OverBoughtSold.NONE): 
+        self.PeekLevel = level
+        self.ClosePrice = closePrice
+        self.OverBoughtSold = overBoughtSold
+        self.RSI = rsi
+        self.Date = date
+
+class RSIDivergenceModel:
+    DivergenceLevel = cenum.DivergenceLevel.NONE
+    DivergenceLevelName = str()
+    def __init__(self, peekHighLowRSI): 
+        self.ClosePrice = peekHighLowRSI.ClosePrice
+        self.RSI = peekHighLowRSI.RSI
+        self.PeekLevel = peekHighLowRSI.PeekLevel
+        self.Date = peekHighLowRSI.Date
+        self.OverBoughtSold = peekHighLowRSI.OverBoughtSold
+
 
     

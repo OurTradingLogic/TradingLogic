@@ -39,9 +39,16 @@ class Indicator:
         #change.equals(change_up+change_down)
 
         # Calculate the rolling average of average up and average down
-        avg_up = change_up.rolling(periods).mean()
-        avg_down = change_down.rolling(periods).mean().abs()
+        #avg_up = change_up.rolling(window = periods).mean()
+        #avg_down = change_down.rolling(window = periods).mean().abs()
+        #rsi = 100 * avg_up / (avg_up + avg_down)
+        #relative_strength = avg_up/avg_down
+        #rsi = 100.0 - (100.0 / (1.0 + relative_strength))
 
-        rsi = 100 * avg_up / (avg_up + avg_down)
+        avg_up = change_up.ewm(com = periods-1, adjust=False).mean()
+        avg_down = abs(change_down.ewm(com = periods-1, adjust=False).mean())
+        #rsi = 100 * avg_up / (avg_up + avg_down)
+        relative_strength = avg_up/avg_down
+        rsi = 100 - 100 / (1 + relative_strength)
 
         return rsi
