@@ -148,8 +148,8 @@ class Signal:
 
         result = {}
 
-        if peekHighLowTrendResult != enum.Trend.NONE: 
-            signal = enum.Signal.NONE
+        signal = enum.Signal.NONE
+        if peekHighLowTrendResult != enum.Trend.NONE:            
             if peekHighLowTrendResult == enum.Trend.UP:
                 signal = enum.Signal.BUY
             elif peekHighLowTrendResult == enum.Trend.DOWN:
@@ -186,9 +186,9 @@ class Signal:
 
         sma_20 = stockData['sma_20'][len(stockData)-1]
         signal = enum.Signal.NONE
-        if latestPrice > sma_20 and lastPeekHLLevel.SMA_20 > lastPeekHLLevel.LowPrice:
+        if latestPrice > sma_20 and lastPeekHLLevel.SMA_20 > lastPeekHLLevel.HighPrice:
             signal = enum.Signal.BUY
-        elif latestPrice < sma_20 and lastPeekHLLevel.SMA_20 < lastPeekHLLevel.HighPrice:
+        elif latestPrice < sma_20 and lastPeekHLLevel.SMA_20 < lastPeekHLLevel.LowPrice:
             signal = enum.Signal.SELL
 
         result = {}

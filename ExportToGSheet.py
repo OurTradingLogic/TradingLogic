@@ -54,11 +54,11 @@ for stockname, data in oneMonthData.items():
     df['rsi_14'] = indicator.rsi(df['close'], 14)
     peekHL = peekHighLow.PeekHighLow(df)
 
-    rsicall = rsi.RelativeStrengthIndex(df, trendCountCheck = 0)
-    tradelist = rsicall.getBEARISHDivergencePoints()
-    tradelist2 = rsicall.getBULLISHDivergencePoints()
-    tradelist3 = rsicall.getLastBEARISHDivergencePoints()
-    tradelist4 = rsicall.getLastBULLISHDivergencePoints()
+    #rsicall = rsi.RelativeStrengthIndex(df, trendCountCheck = 0)
+    #tradelist = rsicall.getBEARISHDivergencePoints()
+    #tradelist2 = rsicall.getBULLISHDivergencePoints()
+    #tradelist3 = rsicall.getLastBEARISHDivergencePoints()
+    #tradelist4 = rsicall.getLastBULLISHDivergencePoints()
 
     osignal.basedOnPeekHighLowTrend(stockname, df, peekHL.findCurrentTrend(latestprice))
     osignal.basedOnPeekHighLowSR(stockname, df, peekHL.getLastPeekSRLevel())
