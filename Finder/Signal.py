@@ -162,6 +162,9 @@ class Signal:
         return result
 
     def basedOnPeekHighLowSR(self, stockname, stockData, peekHighLowSR):
+        if not peekHighLowSR:
+            return {}
+
         latestPrice = stockData['close'][len(stockData)-1]
         latestDate = stockData['date'][len(stockData)-1]
 

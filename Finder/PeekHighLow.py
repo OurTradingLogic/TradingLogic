@@ -270,7 +270,10 @@ class PeekHighLow:
 
     def getLastPeekSRLevel(self):
         self.__loadSRLevel_list()
-        srLevel = self.__SRLevel_list[-1]
+        if self.__SRLevel_list:
+            srLevel = self.__SRLevel_list[-1]
+        else:
+            srLevel = None   
         return srLevel
 
     def getMarketTrendLine(self, checkTrendCount = 3):

@@ -18,7 +18,10 @@ class YahooAPI:
     def __amdentMarketSuffix(self, stocklist):
         tickersresult = []
         for stock in stocklist:
-            tickersresult.append(stock['tradingsymbol'] + ".NS") 
+            if stock['exchange'] == 'NSE':
+                tickersresult.append(stock['tradingsymbol'] + ".NS") 
+            elif stock['exchange'] == 'BSE':
+                tickersresult.append(stock['tradingsymbol'] + ".BO") 
 
         return tickersresult  
 

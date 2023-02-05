@@ -21,15 +21,32 @@ enddate = datetime.now()
 stockList = slist.StockList(cenum.ExportFrom.GSHEET).get()
 
 yahooAPI1 = yapi.YahooAPI(stockList)
-oneWeekData = yahooAPI1.history_data(start=startdate, end=enddate, interval="1wk").GetResult()
+dailyData = yahooAPI1.history_data(start=startdate, end=enddate, interval="1d").GetResult()
 
 yahooAPI2 = yapi.YahooAPI(stockList)
-oneMonthData = yahooAPI2.history_data(start=startdate, end=enddate, interval="1mo").GetResult()
+weeklyData = yahooAPI2.history_data(start=startdate, end=enddate, interval="1wk").GetResult()
+
+yahooAPI3 = yapi.YahooAPI(stockList)
+monthlyData = yahooAPI3.history_data(start=startdate, end=enddate, interval="1mo").GetResult()
 
 indicator = tools.Indicator()
 osignal = snal.Signal()
 
-for stockname, data in oneWeekData.items():
+for stockname, data in dailyData.items():
+    df = pd.DataFrame.from_dict(data)
+    if df['close'].isnull().all():
+        continue
+    df['sma_20'] = indicator.sma(df.close, 20)
+    df['upper20_bb'], df['lower20_bb'] = indicator.bb(df['close'], df['sma_20'], 20)
+    df['rsi_14'] = indicator.rsi(df['close'], 14)
+
+    peekHL = peekHighLow.PeekHighLow(df)  
+
+    osignal.basedOnMovingAverage20(stockname, df, peekHL.getLastPeekHLLevel())
+
+    peekHL.__del__()
+
+for stockname, data in weeklyData.items():
     df = pd.DataFrame.from_dict(data)
     if df['close'].isnull().all():
         continue
@@ -39,11 +56,10 @@ for stockname, data in oneWeekData.items():
     peekHL = peekHighLow.PeekHighLow(df)  
 
     osignal.basedOnBollingerBand(stockname, df)
-    osignal.basedOnMovingAverage20(stockname, df, peekHL.getLastPeekHLLevel())
 
     peekHL.__del__()
 
-for stockname, data in oneMonthData.items():
+for stockname, data in monthlyData.items():
     df = pd.DataFrame.from_dict(data)
     if df['close'].isnull().all():
         continue
@@ -54,7 +70,7 @@ for stockname, data in oneMonthData.items():
     df['rsi_14'] = indicator.rsi(df['close'], 14)
     peekHL = peekHighLow.PeekHighLow(df)
 
-    #rsicall = rsi.RelativeStrengthIndex(df, trendCountCheck = 0)
+   #rsicall = rsi.RelativeStrengthIndex(df, trendCountCheck = 0)
     #tradelist = rsicall.getBEARISHDivergencePoints()
     #tradelist2 = rsicall.getBULLISHDivergencePoints()
     #tradelist3 = rsicall.getLastBEARISHDivergencePoints()
