@@ -6,6 +6,7 @@ class Indicators(Enum):
     TREND = 2
     SUPPORTRESISTENCE = 3
     MOVINGAVERAGE20 = 4
+    RSI14_OverBoughtSold = 5
     NONE = 0
 
 class BB_BreakOut(Enum):

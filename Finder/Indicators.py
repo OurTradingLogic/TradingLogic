@@ -37,7 +37,6 @@ class Indicator:
 
         # Verify that we did not make any mistakes
         #change.equals(change_up+change_down)
-
         # Calculate the rolling average of average up and average down
         #avg_up = change_up.rolling(window = periods).mean()
         #avg_down = change_down.rolling(window = periods).mean().abs()

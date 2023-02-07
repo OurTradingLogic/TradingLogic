@@ -9,6 +9,7 @@ import Finder.BollingerBand as bband
 import Finder.PeekHighLow as peekHL
 from collections import defaultdict
 import numpy as np
+import Finder.RelativeStrengthIndex as rsi
 
 #https://medium.com/geekculture/candlestick-trading-a-full-guide-on-patterns-and-strategies-b1efcb98675c
 
@@ -162,19 +163,17 @@ class Signal:
         return result
 
     def basedOnPeekHighLowSR(self, stockname, stockData, peekHighLowSR):
-        if not peekHighLowSR:
-            return {}
-
         latestPrice = stockData['close'][len(stockData)-1]
         latestDate = stockData['date'][len(stockData)-1]
 
         signal = enum.Signal.NONE
-        if peekHighLowSR.SRLevel == enum.SRLevel.SUPPORT:
-            if latestPrice > peekHighLowSR.HighPrice:
-                signal = enum.Signal.BUY
-        elif peekHighLowSR.SRLevel == enum.SRLevel.RESISTENCE:  
-            if latestPrice < peekHighLowSR.LowPrice:
-                signal = enum.Signal.SELL
+        if peekHighLowSR:
+            if peekHighLowSR.SRLevel == enum.SRLevel.SUPPORT:
+                if latestPrice > peekHighLowSR.HighPrice:
+                    signal = enum.Signal.BUY
+            elif peekHighLowSR.SRLevel == enum.SRLevel.RESISTENCE:  
+                if latestPrice < peekHighLowSR.LowPrice:
+                    signal = enum.Signal.SELL
 
         result = {}
         signal_date = latestDate.strftime("%Y-%m-%d")
@@ -199,5 +198,29 @@ class Signal:
         signal_date = latestDate.strftime("%Y-%m-%d")
         result = self.__constructindicatoroutput(stockname, ienum.Indicators.MOVINGAVERAGE20.name, \
             signal.name, signal_date, latestPrice) 
+
+        return result
+
+    def basedOnRelativeStrenghtIndex14(self, stockname, stockData):
+        rsicall = rsi.RelativeStrengthIndex(stockData, trendCountCheck = 0)
+        lastOverBoughtSold = rsicall.getLastOverBoughtSoldPeekLevel()
+        lastOverBoughtSoldDate = lastOverBoughtSold.Date
+        lastOverBoughtSoldPrice = lastOverBoughtSold.ClosePrice
+
+        latestPrice = stockData['close'][len(stockData)-1]
+        latestDate = stockData['date'][len(stockData)-1]
+
+        signal = enum.Signal.NONE
+        if latestDate <= lastOverBoughtSoldDate + timedelta(90):
+            if lastOverBoughtSold.OverBoughtSold == enum.OverBoughtSold.OVERSOLD:
+                signal = enum.Signal.BUY
+            elif lastOverBoughtSold.OverBoughtSold == enum.OverBoughtSold.OVERBOUGHT:
+                signal = enum.Signal.SELL
+
+        result = {}
+
+        signal_date = lastOverBoughtSoldDate.strftime("%Y-%m-%d")
+        result = self.__constructindicatoroutput(stockname, ienum.Indicators.RSI14_OverBoughtSold.name, \
+            signal.name, signal_date, lastOverBoughtSoldPrice) 
 
         return result

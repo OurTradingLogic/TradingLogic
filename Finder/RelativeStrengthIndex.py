@@ -3,7 +3,9 @@ import Model.FinderModel as fmodel
 from operator import attrgetter
 
 class RelativeStrengthIndex:
-    def __init__(self, data, trendCountCheck = 2):
+    def __init__(self, data, overBoughtLevel = 70, overSoldLevel = 30, trendCountCheck = 2):
+        self.overBoughtLevel = overBoughtLevel
+        self.overSoldLevel = overSoldLevel
         self.PEEK_HIGH_LOW_TREND_COUNT = trendCountCheck
         self.__hl_list = []
         self.__load(data)
@@ -15,7 +17,7 @@ class RelativeStrengthIndex:
         self.__hl_list.clear()
         self.__DivergenceLevel_list.clear()
 
-    def __load(self,data, overBoughtLevel = 70, overSoldLevel = 30):
+    def __load(self,data):
         trend = enum.Trend.NONE
         preTrend = enum.Trend.NONE
         trendContinueCnt = 0
@@ -66,9 +68,9 @@ class RelativeStrengthIndex:
                 if trendContinueCnt == self.PEEK_HIGH_LOW_TREND_COUNT:
                     overBoughtSold = enum.OverBoughtSold.NONE
                     
-                    if rsi_14 >= overBoughtLevel:
+                    if rsi_14 >= self.overBoughtLevel:
                         overBoughtSold = enum.OverBoughtSold.OVERBOUGHT
-                    elif rsi_14 <= overSoldLevel:
+                    elif rsi_14 <= self.overSoldLevel:
                         overBoughtSold = enum.OverBoughtSold.OVERSOLD
 
                     if trend == enum.Trend.UP:
@@ -91,6 +93,10 @@ class RelativeStrengthIndex:
     def getOverBoughtSoldPeekLevels(self):
         overBoughtSoldList =  [item for item in self.__hl_list if item.OverBoughtSold != enum.OverBoughtSold.NONE] 
         return overBoughtSoldList
+
+    def getLastOverBoughtSoldPeekLevel(self):
+        getOverBoughtSoldPeekLevels = self.getOverBoughtSoldPeekLevels()
+        return getOverBoughtSoldPeekLevels[-1]
 
     def __calculateDivergencePoints(self, waitingCount = 2): 
         overBoughtSoldDivergenceList = [] 

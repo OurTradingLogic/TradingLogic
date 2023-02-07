@@ -8,7 +8,6 @@ import Helper.JsonReader as jsonHelper
 import Finder.Indicators as tools
 import Finder.Signal as snal
 import Finder.PeekHighLow as peekHighLow
-import Finder.RelativeStrengthIndex as rsi
 
 #Get it from Config
 exportToGSheetConfig = jsonHelper.getnodedata('ExportToGSheet')
@@ -43,6 +42,7 @@ for stockname, data in dailyData.items():
     peekHL = peekHighLow.PeekHighLow(df)  
 
     osignal.basedOnMovingAverage20(stockname, df, peekHL.getLastPeekHLLevel())
+    osignal.basedOnRelativeStrenghtIndex14(stockname, df)
 
     peekHL.__del__()
 
@@ -69,12 +69,6 @@ for stockname, data in monthlyData.items():
     df['upper20_bb'], df['lower20_bb'] = indicator.bb(df['close'], df['sma_20'], 20)
     df['rsi_14'] = indicator.rsi(df['close'], 14)
     peekHL = peekHighLow.PeekHighLow(df)
-
-   #rsicall = rsi.RelativeStrengthIndex(df, trendCountCheck = 0)
-    #tradelist = rsicall.getBEARISHDivergencePoints()
-    #tradelist2 = rsicall.getBULLISHDivergencePoints()
-    #tradelist3 = rsicall.getLastBEARISHDivergencePoints()
-    #tradelist4 = rsicall.getLastBULLISHDivergencePoints()
 
     osignal.basedOnPeekHighLowTrend(stockname, df, peekHL.findCurrentTrend(latestprice))
     osignal.basedOnPeekHighLowSR(stockname, df, peekHL.getLastPeekSRLevel())
