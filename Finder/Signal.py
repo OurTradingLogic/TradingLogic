@@ -211,7 +211,7 @@ class Signal:
         latestDate = stockData['date'][len(stockData)-1]
 
         signal = enum.Signal.NONE
-        if latestDate <= lastOverBoughtSoldDate + timedelta(90):
+        if latestDate <= lastOverBoughtSoldDate + timedelta(5):
             if lastOverBoughtSold.OverBoughtSold == enum.OverBoughtSold.OVERSOLD:
                 signal = enum.Signal.BUY
             elif lastOverBoughtSold.OverBoughtSold == enum.OverBoughtSold.OVERBOUGHT:
