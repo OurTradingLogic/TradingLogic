@@ -211,6 +211,7 @@ class Signal:
         latestDate = stockData['date'][len(stockData)-1]
 
         signal = enum.Signal.NONE
+        #checking last 5 days
         if latestDate <= lastOverBoughtSoldDate + timedelta(5):
             if lastOverBoughtSold.OverBoughtSold == enum.OverBoughtSold.OVERSOLD:
                 signal = enum.Signal.BUY
@@ -222,5 +223,30 @@ class Signal:
         signal_date = lastOverBoughtSoldDate.strftime("%Y-%m-%d")
         result = self.__constructindicatoroutput(stockname, ienum.Indicators.RSI14_OverBoughtSold.name, \
             signal.name, signal_date, lastOverBoughtSoldPrice) 
+
+        return result
+
+    def basedOnRSI14DivergenceLevel(self, stockname, stockData):
+        rsicall = rsi.RelativeStrengthIndex(stockData, trendCountCheck = 0)
+        lastRSIDivergencePoints = rsicall.getLastDivergencePoints()
+        lastRSIDivergenceDate = lastRSIDivergencePoints.Date
+        lastRSIDivergencePrice = lastRSIDivergencePoints.ClosePrice
+
+        latestPrice = stockData['close'][len(stockData)-1]
+        latestDate = stockData['date'][len(stockData)-1]
+
+        signal = enum.Signal.NONE
+        #checking last 365*4 days
+        if latestDate <= lastRSIDivergenceDate + timedelta(365*4):
+            if lastRSIDivergencePoints.DivergenceLevel == enum.DivergenceLevel.BEARISH:
+                signal = enum.Signal.BUY
+            elif lastRSIDivergencePoints.DivergenceLevel == enum.DivergenceLevel.BULLISH:
+                signal = enum.Signal.SELL
+
+        result = {}
+
+        signal_date = lastRSIDivergenceDate.strftime("%Y-%m-%d")
+        result = self.__constructindicatoroutput(stockname, ienum.Indicators.RSI14_DIVERGENCE.name, \
+            signal.name, signal_date, lastRSIDivergencePrice) 
 
         return result

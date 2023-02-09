@@ -105,33 +105,36 @@ class RelativeStrengthIndex:
 
         firstOverBoughtSoldPoint = None
         firstOverBoughtSoldPointFound = 0
+
         for hl in self.__hl_list: 
 
             if firstOverBoughtSoldPoint != None:
                 firstOverBoughtSoldPointFound+=1
                 if firstOverBoughtSoldPoint.PeekLevel == hl.PeekLevel:
                     if firstOverBoughtSoldPoint.OverBoughtSold == enum.OverBoughtSold.OVERSOLD and \
-                        hl.OverBoughtSold == firstOverBoughtSoldPoint.OverBoughtSold and hl.PeekLevel == firstOverBoughtSoldPoint.PeekLevel and \
-                        firstOverBoughtSoldPoint.RSI < hl.RSI:
-                        bullishDivergenceCount+=1
-                        hlCurrent = fmodel.RSIDivergenceModel(hl) 
-                        hlCurrent.DivergenceLevel = firstOverBoughtSoldPoint.DivergenceLevel = enum.DivergenceLevel.BULLISH
-                        hlCurrent.DivergenceLevelName = firstOverBoughtSoldPoint.DivergenceLevelName = enum.DivergenceLevel.BULLISH.name + str(bullishDivergenceCount)                      
-                        overBoughtSoldDivergenceList.append(firstOverBoughtSoldPoint)
-                        overBoughtSoldDivergenceList.append(hlCurrent)
-                        firstOverBoughtSoldPointFound = 0
-                        firstOverBoughtSoldPoint = None  
+                        hl.OverBoughtSold == firstOverBoughtSoldPoint.OverBoughtSold and hl.PeekLevel == firstOverBoughtSoldPoint.PeekLevel: 
+                        if firstOverBoughtSoldPoint.RSI < hl.RSI:
+                            bullishDivergenceCount+=1
+                            hlCurrent = fmodel.RSIDivergenceModel(hl) 
+                            hlCurrent.DivergenceLevel = firstOverBoughtSoldPoint.DivergenceLevel = enum.DivergenceLevel.BULLISH
+                            hlCurrent.DivergenceLevelName = firstOverBoughtSoldPoint.DivergenceLevelName = enum.DivergenceLevel.BULLISH.name + str(bullishDivergenceCount)                      
+                            overBoughtSoldDivergenceList.append(firstOverBoughtSoldPoint)
+                            overBoughtSoldDivergenceList.append(hlCurrent)
+                            firstOverBoughtSoldPointFound = 0
+                            firstOverBoughtSoldPoint = None  
+                        else: firstOverBoughtSoldPoint = fmodel.RSIDivergenceModel(hl)
                     elif firstOverBoughtSoldPoint.OverBoughtSold == enum.OverBoughtSold.OVERBOUGHT and \
-                        hl.OverBoughtSold == firstOverBoughtSoldPoint.OverBoughtSold and hl.PeekLevel == firstOverBoughtSoldPoint.PeekLevel and \
-                        firstOverBoughtSoldPoint.RSI > hl.RSI:
-                        bearishDivergenceCount+=1
-                        hlCurrent = fmodel.RSIDivergenceModel(hl) 
-                        hlCurrent.DivergenceLevel = firstOverBoughtSoldPoint.DivergenceLevel = enum.DivergenceLevel.BEARISH
-                        hlCurrent.DivergenceLevelName = firstOverBoughtSoldPoint.DivergenceLevelName = enum.DivergenceLevel.BEARISH.name + str(bearishDivergenceCount)
-                        overBoughtSoldDivergenceList.append(firstOverBoughtSoldPoint)
-                        overBoughtSoldDivergenceList.append(hlCurrent)
-                        firstOverBoughtSoldPointFound = 0
-                        firstOverBoughtSoldPoint = None  
+                        hl.OverBoughtSold == firstOverBoughtSoldPoint.OverBoughtSold and hl.PeekLevel == firstOverBoughtSoldPoint.PeekLevel:
+                        if firstOverBoughtSoldPoint.RSI > hl.RSI:
+                            bearishDivergenceCount+=1
+                            hlCurrent = fmodel.RSIDivergenceModel(hl) 
+                            hlCurrent.DivergenceLevel = firstOverBoughtSoldPoint.DivergenceLevel = enum.DivergenceLevel.BEARISH
+                            hlCurrent.DivergenceLevelName = firstOverBoughtSoldPoint.DivergenceLevelName = enum.DivergenceLevel.BEARISH.name + str(bearishDivergenceCount)
+                            overBoughtSoldDivergenceList.append(firstOverBoughtSoldPoint)
+                            overBoughtSoldDivergenceList.append(hlCurrent)
+                            firstOverBoughtSoldPointFound = 0
+                            firstOverBoughtSoldPoint = None  
+                        else: firstOverBoughtSoldPoint = fmodel.RSIDivergenceModel(hl)
             
             if hl.OverBoughtSold != enum.OverBoughtSold.NONE:
                 if firstOverBoughtSoldPoint == None:
@@ -168,6 +171,10 @@ class RelativeStrengthIndex:
     def getLastBULLISHDivergencePoints(self):    
         bullishDivergencePoint = self.getBULLISHDivergencePoints()
         return bullishDivergencePoint[-1]
+
+    def getLastDivergencePoints(self):
+        divergencePoint = self.getRSIDivergencePoints()
+        return divergencePoint[-1]
     
     def getPeekHighLowList(self):
         return self.__hl_list

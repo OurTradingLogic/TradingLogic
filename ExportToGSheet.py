@@ -43,6 +43,7 @@ for stockname, data in dailyData.items():
 
     osignal.basedOnMovingAverage20(stockname, df, peekHL.getLastPeekHLLevel())
     osignal.basedOnRelativeStrenghtIndex14(stockname, df)
+    osignal.basedOnRSI14DivergenceLevel(stockname, df)
 
     peekHL.__del__()
 
