@@ -9,7 +9,7 @@
 "ExportToGSheet": 
     {"fromday": 500, "Internal": ""},
 "GSheet_StockList":
-{"File_Name":"StockList","Sheet_Name":"Sheet1"},
+{"File_Name":"OurTradingLogic","Sheet_Name":"StockList"},
 "GSheet_TradingList":
-{"File_Name":"TradingList","Sheet_Name":"Sheet1"}
+{"File_Name":"OurTradingLogic","Sheet_Name":"TradingList"}
 }

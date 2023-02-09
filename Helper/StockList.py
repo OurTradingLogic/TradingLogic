@@ -24,6 +24,9 @@ class StockList:
             gs = gsheet.GSheet(gSheetStockListConfig['File_Name'])
             self._wks = gs.sheet(gSheetStockListConfig['Sheet_Name'])
 
+    def __del__(self):
+        self._wks = None
+
     def get(self):
         all_list = [] #empty list
         if self._exportFrom == enum.ExportFrom.GSHEET:
