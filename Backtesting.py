@@ -9,7 +9,8 @@ import Finder.Indicators as tools
 import Finder.Signal as snal
 import Finder.PeekHighLow as peekHighLow
 import Finder.RelativeStrengthIndex as rsi
-
+import time
+import sys
 
 #Get it from Config
 exportToGSheetConfig = jsonHelper.getnodedata('ExportToGSheet')
@@ -19,66 +20,40 @@ startdate = datetime.now() - timedelta(365*36) - timedelta(20)
 enddate = datetime.now()
 
 #Get Stock List i/p
-stockList = slist.StockList(cenum.ExportFrom.GSHEET).get()
-indicator = tools.Indicator()
-osignal = snal.Signal()
+stockList = slist.StockList(cenum.ExportFrom.GSHEET, isTest = True).get()
 
 yahooAPI1 = yapi.YahooAPI(stockList)
-yahooAPI2 = yapi.YahooAPI(stockList)
 
-enddateTesting = enddate - timedelta(days=366)
-oneWeekDataGetEndDate = yahooAPI1.history_data(start=startdate, end=enddateTesting, interval="1wk").GetResult()
-weeklyEndDate = oneWeekDataGetEndDate['TATAMOTORS.NS'][-1]['date']
+enddateTesting = enddate - timedelta(days=366*4)
+weeklyData = yahooAPI1.history_data(start=startdate, end=enddateTesting, interval="1wk").GetResult()
+endDateTesting = list(weeklyData.items())[0][1][-1]['date']
+#endDateTestingUpto = enddate
+endDateTestingUpto = enddateTesting + timedelta(days=366*1)
 
-while (weeklyEndDate <= enddate):
+tradingList = tlist.TradingList(cenum.ImportTo.GSHEET, isTest= True)
 
-    oneWeekData = yahooAPI1.history_data(start=startdate, end=weeklyEndDate, interval="1wk").GetResult()   
-    oneMonthData = yahooAPI2.history_data(start=startdate, end=weeklyEndDate, interval="1mo").GetResult()
+dayDiff =  enddate - endDateTesting
+toolbar_width = dayDiff.days
+# setup progressbar
+toolbar_width_avg = toolbar_width/100
+sys.stdout.write("[%s]" % (" " * toolbar_width))
+sys.stdout.flush()
+sys.stdout.write("\b" * (toolbar_width+1)) # return to start of line, after '['
 
-    for stockname, data in oneWeekData.items():
-        df = pd.DataFrame.from_dict(data)
-        if df['close'].isnull().all():
-            continue
-        df['sma_20'] = indicator.sma(df.close, 20)
-        df['upper20_bb'], df['lower20_bb'] = indicator.bb(df['close'], df['sma_20'], 20)
-        df['rsi_14'] = indicator.rsi(df['close'], 14)
-        peekHL = peekHighLow.PeekHighLow(df)  
+#try:
+while (endDateTesting <= endDateTestingUpto):
+    tradingList.CalulateTradingSignal(startdate,endDateTesting)
+    endDateTesting += timedelta(days=1)
 
-        osignal.basedOnBollingerBand(stockname, df)
-        osignal.basedOnMovingAverage20(stockname, df, peekHL.getLastPeekHLLevel())
+    sys.stdout.write("-")
+    sys.stdout.flush()
+#except Exception as e:
+    #print("Exception " + str(e))
 
-        peekHL.__del__()
+sys.stdout.write("]\n") # this ends the progress bar
 
-    for stockname, data in oneMonthData.items():
-        df = pd.DataFrame.from_dict(data)
-        if df['close'].isnull().all():
-            continue
-
-        latestprice = df['close'][len(df)-1]
-        df['sma_20'] = indicator.sma(df.close, 20)
-        df['upper20_bb'], df['lower20_bb'] = indicator.bb(df['close'], df['sma_20'], 20)
-        df['rsi_14'] = indicator.rsi(df['close'], 14)
-        peekHL = peekHighLow.PeekHighLow(df)
-
-        #rsicall = rsi.RelativeStrengthIndex(df, trendCountCheck = 0)
-        #tradelist = rsicall.getBEARISHDivergencePoints()
-        #tradelist2 = rsicall.getBULLISHDivergencePoints()
-        #tradelist3 = rsicall.getLastBEARISHDivergencePoints()
-        #tradelist4 = rsicall.getLastBULLISHDivergencePoints()
-
-        osignal.basedOnPeekHighLowTrend(stockname, df, peekHL.findCurrentTrend(latestprice))
-        osignal.basedOnPeekHighLowSR(stockname, df, peekHL.getLastPeekSRLevel())
-        peekHL.__del__()
-
-    weeklyEndDate += timedelta(days=7)
-
-print("**************Exporting**************")
-tradingList = osignal.GetAllSignals()
-#Write Trading List o/p
-stockList = tlist.TradingList(cenum.ImportTo.GSHEET).write(tradingList)
-
-osignal.__del__()
-print("**************Final*****************")
+tradingList.ExportSignal()
+tradingList.__del__()
 
 
 

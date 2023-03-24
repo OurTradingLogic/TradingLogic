@@ -10,6 +10,7 @@ import Finder.PeekHighLow as peekHL
 from collections import defaultdict
 import numpy as np
 import Finder.RelativeStrengthIndex as rsi
+import Utility.Constant as con
 
 #https://medium.com/geekculture/candlestick-trading-a-full-guide-on-patterns-and-strategies-b1efcb98675c
 
@@ -124,26 +125,76 @@ class Signal:
     def GetAllSignals(self):
         return self.__signals
 
-    def __constructindicatoroutput(self, stockname, indicator, signal, date, price):
-        signal = {"Tool": indicator,"Signal" : signal, "Date": date, "Price": round(price,2)}
+    def __constructindicatoroutput(self, stockname, indicator, signal, date, price, onDate = ""):
+        on_date = onDate.strftime(con.DATE_FORMAT_YMD)
+
+        signal = {"Tool": indicator,"Signal" : signal, "Date": date, "Price": round(price,2), "OnDate": on_date}
         if not np.isnan(price):
             self.__signals[stockname].append(signal)
 
         return signal
 
-    def basedOnBollingerBand(self, stockname, stockData):
-        bbResult = bband.implement_bb20_strategy(stockData)
+    def basedOnBollingerBand2(self, stockname, stockData, onDate = "", internal=""):
+
+        bbandObject = bband.BollingerBand(stockData) 
+        lastBBOverHighLowLevel = bbandObject.getLastOverHighLowLevel(onDate)
+
         result = {}
 
-        if len(bbResult) > 0: 
-            last_date = bbResult[len(bbResult)-1]['date']
-            last_signal_date = last_date.strftime("%Y-%m-%d")
-            result = self.__constructindicatoroutput(stockname, ienum.Indicators.BBAND.name, \
-                bbResult[len(bbResult)-1]['signal'], last_signal_date, bbResult[len(bbResult)-1]['close'])   
+        signal = enum.Signal.NONE
+        if lastBBOverHighLowLevel: 
+            last_date = lastBBOverHighLowLevel.Date
+            last_signal_date = last_date.strftime(con.DATE_FORMAT_YMD)
+            if lastBBOverHighLowLevel.BB_OverHighLowLevel == ienum.BB_OverHighLowLevel.OVERHIGHLEVEL:
+                signal = enum.Signal.SELL
+            elif lastBBOverHighLowLevel.BB_OverHighLowLevel == ienum.BB_OverHighLowLevel.OVERLOWLEVEL:
+                signal = enum.Signal.BUY
+            result = self.__constructindicatoroutput(stockname, ienum.Indicators.BBAND.name + internal, \
+                signal, last_signal_date, lastBBOverHighLowLevel.ClosePrice, onDate)   
 
         return result
 
-    def basedOnPeekHighLowTrend(self, stockname, stockData, peekHighLowTrendResult):
+    def basedOnBollingerBand(self, stockname, stockData, onDate = "", internal = enum.Interval.NONE):
+        result = {}
+        signal = enum.Signal.NONE
+
+        if internal == enum.Interval.DAILY:
+            bbandObject = bband.BollingerBand(stockData) 
+            lastBBOverHighLowLevel = bbandObject.getLastOverHighLowLevel(onDate)
+            if lastBBOverHighLowLevel: 
+                last_date = lastBBOverHighLowLevel.Date
+                last_signal_date = last_date.strftime(con.DATE_FORMAT_YMD)
+                if lastBBOverHighLowLevel.BB_OverHighLowLevel == ienum.BB_OverHighLowLevel.OVERHIGHLEVEL:
+                    signal = enum.Signal.SELL
+                elif lastBBOverHighLowLevel.BB_OverHighLowLevel == ienum.BB_OverHighLowLevel.OVERLOWLEVEL:
+                    signal = enum.Signal.BUY
+                result = self.__constructindicatoroutput(stockname, ienum.Indicators.BBAND.name + internal.name, \
+                    signal.name, last_signal_date, lastBBOverHighLowLevel.ClosePrice, onDate)   
+            else:
+                result = self.__constructindicatoroutput(stockname, ienum.Indicators.BBAND.name + internal.name, \
+                    signal.name, "NONE", 0, onDate) 
+        else:
+            sma20 = stockData['sma_20'][len(stockData)-1]
+            lowPrice = stockData['low'][len(stockData)-1]
+            highPrice = stockData['high'][len(stockData)-1]
+            openPrice = stockData['open'][len(stockData)-1]
+            closePrice = stockData['close'][len(stockData)-1]
+            latestDate = stockData['date'][len(stockData)-1]
+            upper20_bb = stockData['upper20_bb'][len(stockData)-1]
+            last_signal_date = latestDate.strftime(con.DATE_FORMAT_YMD)
+            if closePrice > sma20:
+                # if (internal == enum.Interval.MONTHLY and upper20_bb < highPrice) or candle.isBigRedCandle(openPrice, highPrice, lowPrice, closePrice):
+                #     signal = enum.Signal.NONE
+                # else:              
+                signal = enum.Signal.BUY
+            else:
+                signal = enum.Signal.SELL
+            result = self.__constructindicatoroutput(stockname, ienum.Indicators.BBAND.name + internal.name, \
+                    signal.name, last_signal_date, closePrice, onDate)  
+
+        return result
+
+    def basedOnPeekHighLowTrend(self, stockname, stockData, peekHighLowTrendResult, onDate = "", internal=""):
         latestPrice = stockData['close'][len(stockData)-1]
         latestDate = stockData['date'][len(stockData)-1]
 
@@ -156,13 +207,13 @@ class Signal:
             elif peekHighLowTrendResult == enum.Trend.DOWN:
                 signal = enum.Signal.SELL
             
-            signal_date = latestDate.strftime("%Y-%m-%d")           
-            result = self.__constructindicatoroutput(stockname, ienum.Indicators.TREND.name, \
-                signal.name, signal_date, latestPrice)   
+            signal_date = latestDate.strftime(con.DATE_FORMAT_YMD)           
+            result = self.__constructindicatoroutput(stockname, ienum.Indicators.TREND.name + internal, \
+                signal.name, signal_date, latestPrice, onDate)   
 
         return result
 
-    def basedOnPeekHighLowSR(self, stockname, stockData, peekHighLowSR):
+    def basedOnPeekHighLowSR(self, stockname, stockData, peekHighLowSR, onDate="", internal=""):
         latestPrice = stockData['close'][len(stockData)-1]
         latestDate = stockData['date'][len(stockData)-1]
 
@@ -176,13 +227,13 @@ class Signal:
                     signal = enum.Signal.SELL
 
         result = {}
-        signal_date = latestDate.strftime("%Y-%m-%d")
-        result = self.__constructindicatoroutput(stockname, ienum.Indicators.SUPPORTRESISTENCE.name, \
-            signal.name, signal_date, latestPrice)   
+        signal_date = latestDate.strftime(con.DATE_FORMAT_YMD)
+        result = self.__constructindicatoroutput(stockname, ienum.Indicators.SUPPORTRESISTENCE.name + internal, \
+            signal.name, signal_date, latestPrice, onDate)   
 
         return result
 
-    def basedOnMovingAverage20(self, stockname, stockData, lastPeekHLLevel):
+    def basedOnMovingAverage20(self, stockname, stockData, lastPeekHLLevel, onDate="", internal=""):
         latestPrice = stockData['close'][len(stockData)-1]
         latestDate = stockData['date'][len(stockData)-1]
 
@@ -195,13 +246,13 @@ class Signal:
 
         result = {}
 
-        signal_date = latestDate.strftime("%Y-%m-%d")
-        result = self.__constructindicatoroutput(stockname, ienum.Indicators.MOVINGAVERAGE20.name, \
-            signal.name, signal_date, latestPrice) 
+        signal_date = latestDate.strftime(con.DATE_FORMAT_YMD)
+        result = self.__constructindicatoroutput(stockname, ienum.Indicators.MOVINGAVERAGE20.name + internal, \
+            signal.name, signal_date, latestPrice, onDate) 
 
         return result
 
-    def basedOnRelativeStrenghtIndex14(self, stockname, stockData):
+    def basedOnRelativeStrenghtIndex14(self, stockname, stockData, onDate="", internal=""):
         rsicall = rsi.RelativeStrengthIndex(stockData, trendCountCheck = 0)
         lastOverBoughtSold = rsicall.getLastOverBoughtSoldPeekLevel()
         lastOverBoughtSoldDate = lastOverBoughtSold.Date
@@ -220,24 +271,25 @@ class Signal:
 
         result = {}
 
-        signal_date = lastOverBoughtSoldDate.strftime("%Y-%m-%d")
-        result = self.__constructindicatoroutput(stockname, ienum.Indicators.RSI14_OverBoughtSold.name, \
-            signal.name, signal_date, lastOverBoughtSoldPrice) 
+        signal_date = lastOverBoughtSoldDate.strftime(con.DATE_FORMAT_YMD)
+        result = self.__constructindicatoroutput(stockname, ienum.Indicators.RSI14_OverBoughtSold.name + internal, \
+            signal.name, signal_date, lastOverBoughtSoldPrice, onDate) 
 
         return result
 
-    def basedOnRSI14DivergenceLevel(self, stockname, stockData):
+    def basedOnRSI14DivergenceLevel(self, stockname, stockData, onDate="", internal=""):
         rsicall = rsi.RelativeStrengthIndex(stockData, trendCountCheck = 0)
         lastRSIDivergencePoints = rsicall.getLastDivergencePoints()
-        lastRSIDivergenceDate = lastRSIDivergencePoints.Date
-        lastRSIDivergencePrice = lastRSIDivergencePoints.ClosePrice
+        if lastRSIDivergencePoints:
+            lastRSIDivergenceDate = lastRSIDivergencePoints.Date
+            lastRSIDivergencePrice = lastRSIDivergencePoints.ClosePrice
 
         latestPrice = stockData['close'][len(stockData)-1]
         latestDate = stockData['date'][len(stockData)-1]
 
         signal = enum.Signal.NONE
-        #checking last 365*4 days
-        if latestDate <= lastRSIDivergenceDate + timedelta(365*4):
+        #checking last 30*2 days
+        if latestDate <= lastRSIDivergenceDate + timedelta(30*2):
             if lastRSIDivergencePoints.DivergenceLevel == enum.DivergenceLevel.BEARISH:
                 signal = enum.Signal.BUY
             elif lastRSIDivergencePoints.DivergenceLevel == enum.DivergenceLevel.BULLISH:
@@ -245,8 +297,11 @@ class Signal:
 
         result = {}
 
-        signal_date = lastRSIDivergenceDate.strftime("%Y-%m-%d")
-        result = self.__constructindicatoroutput(stockname, ienum.Indicators.RSI14_DIVERGENCE.name, \
-            signal.name, signal_date, lastRSIDivergencePrice) 
+        if signal != enum.Signal.NONE:
+            signal_date = lastRSIDivergenceDate.strftime(con.DATE_FORMAT_YMD)
+        else:
+            signal_date = latestDate.strftime(con.DATE_FORMAT_YMD)
+        result = self.__constructindicatoroutput(stockname, ienum.Indicators.RSI14_DIVERGENCE.name + internal, \
+            signal.name, signal_date, lastRSIDivergencePrice, onDate) 
 
         return result

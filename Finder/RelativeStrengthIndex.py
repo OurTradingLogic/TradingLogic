@@ -166,15 +166,24 @@ class RelativeStrengthIndex:
 
     def getLastBEARISHDivergencePoints(self):     
         bearishDivergencePoint = self.getBEARISHDivergencePoints()
-        return bearishDivergencePoint[-1]
+        if bearishDivergencePoint:
+            return bearishDivergencePoint[-1]
+        else:
+            return None
 
     def getLastBULLISHDivergencePoints(self):    
         bullishDivergencePoint = self.getBULLISHDivergencePoints()
-        return bullishDivergencePoint[-1]
+        if bullishDivergencePoint:
+            return bullishDivergencePoint[-1]
+        else:
+            return None
 
     def getLastDivergencePoints(self):
         divergencePoint = self.getRSIDivergencePoints()
-        return divergencePoint[-1]
+        if divergencePoint:
+            return divergencePoint[-1]
+        else:
+            return None
     
     def getPeekHighLowList(self):
         return self.__hl_list

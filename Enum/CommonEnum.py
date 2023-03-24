@@ -15,6 +15,12 @@ class ImportTo(Enum):
   GSHEET = 4
   NONE = 0 
 
+class Interval(Enum):
+  DAILY = 1
+  WEEKLY = 2
+  MONTHLY = 3
+  NONE = 0
+
 class PeekLevel(Enum):
   HIGH = 1
   LOW = 2

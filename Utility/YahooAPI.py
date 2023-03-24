@@ -10,7 +10,7 @@ class YahooAPI:
     def __init__(self, stocklist) -> None:
         super().__init__()
         self.__auto_adjust = False
-        self.__progress_bar = True
+        self.__progress_bar = False
         self.__stocksData = defaultdict(list)
         self.__ticketList = self.__amdentMarketSuffix(stocklist)
         self.__tickets = yf.Tickers(self.__ticketList)

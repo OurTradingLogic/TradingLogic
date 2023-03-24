@@ -20,3 +20,8 @@ class BB_InLine(Enum):
     LOWER_BB_LINE = 2,
     SMA_LINE = 3,
     NONE = 0
+
+class BB_OverHighLowLevel(Enum):
+    OVERHIGHLEVEL = 1
+    OVERLOWLEVEL = 2
+    NONE = 0

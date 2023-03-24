@@ -17,10 +17,13 @@ class StockList:
 
     _exportFrom = enum.ExportFrom.NONE
     _wks = None
-    def __init__(self, exportFrom):
+    def __init__(self, exportFrom, isTest = False):
         self._exportFrom = exportFrom
         if exportFrom == enum.ExportFrom.GSHEET:
-            gSheetStockListConfig = jsonHelper.getnodedata('GSheet_StockList')
+            if isTest:
+                gSheetStockListConfig = jsonHelper.getnodedata('GSheet_StockList_BackTesting')
+            else:    
+                gSheetStockListConfig = jsonHelper.getnodedata('GSheet_StockList')
             gs = gsheet.GSheet(gSheetStockListConfig['File_Name'])
             self._wks = gs.sheet(gSheetStockListConfig['Sheet_Name'])
 

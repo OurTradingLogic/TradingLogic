@@ -8,18 +8,37 @@ import Enum.CommonEnum as enum
 import Helper.StockList as slidt
 import os
 import Helper.JsonReader as jsonHelper
-import Finder.Indicators as indicate
 import Utility.GSheet as gsheet
+import pandas as pd
+import Helper.StockList as slist
+import Finder.Indicators as tools
+import Finder.Signal as snal
+import Finder.PeekHighLow as peekHighLow
+import sys
 
 class TradingList:
     _importto = enum.ImportTo.NONE
     _wks = None
-    def __init__(self, importto): 
+    def __init__(self, importto, isTest = False): 
         self._importto = importto
+        self._indicator = tools.Indicator()
+        self._osignal = snal.Signal()
+        self._isTest = isTest
+        self._backTestFromDay = 0
         if importto == enum.ImportTo.GSHEET:
-            gSheetStockListConfig = jsonHelper.getnodedata('GSheet_TradingList')
+            if isTest:
+                gSheetStockListConfig = jsonHelper.getnodedata('GSheet_TradingList_BackTesting')
+                self._backTestFromDay = gSheetStockListConfig['fromday']
+            else:
+                gSheetStockListConfig = jsonHelper.getnodedata('GSheet_TradingList')
             gs = gsheet.GSheet(gSheetStockListConfig['File_Name'])
             self._wks = gs.sheet(gSheetStockListConfig['Sheet_Name'])
+
+    def __del__(self):
+        self._osignal.__del__()
+        #self._indicator.__del__()
+        self._wks = None
+        self._importto = None
 
     def write(self, dictList):
         if self._importto == enum.ImportTo.GSHEET:
@@ -29,6 +48,7 @@ class TradingList:
             signal=[]
             date=[]
             price=[]
+            onDate=[]
             for stockname, data in dictList.items():
                 for i in range(len(data)):
                     index.append(stockname)
@@ -36,9 +56,10 @@ class TradingList:
                     signal.append(data[i]['Signal'])
                     date.append(data[i]['Date'])
                     price.append(data[i]['Price'])
+                    onDate.append(data[i]['OnDate'])
 
             d = {'Stock Name': pd.Series(index), 'Tool': pd.Series(tool), 'Signal': pd.Series(signal),'Date': pd.Series(date),\
-                'Price': pd.Series(price)}
+                'Price': pd.Series(price), 'OnDate': pd.Series(onDate)}
             df = pd.DataFrame(d)
             self._wks.update([df.columns.values.tolist()] + df.values.tolist())
             self._wks.format('Z1:A1', {'textFormat': {'bold': True}})
@@ -57,6 +78,102 @@ class TradingList:
             trading_symbol = row['symbol'] + ".NS"
         cjson = {"tradingsymbol" : trading_symbol}
         return cjson
+
+    def ExportSignal(self):
+        print("**************Exporting**************")
+        tradingList = self._osignal.GetAllSignals()
+        #Write Trading List o/p
+        self.write(tradingList)
+        print("**************Final*****************")
+
+    def CalulateTradingSignal(self, stockname, df, internal):
+        if df['close'].isnull().all():
+            return
+
+        enddate = df['date'][len(df)-1]
+        latestprice = df['close'][len(df)-1]
+        df['sma_20'] = self._indicator.sma(df.close, 20)
+        df['upper20_bb'], df['lower20_bb'] = self._indicator.bb(df['close'], df['sma_20'], 20)
+        df['rsi_14'] = self._indicator.rsi(df['close'], 14)
+
+        peekHL = peekHighLow.PeekHighLow(df)  
+
+        #self._osignal.basedOnMovingAverage20(stockname, df, peekHL.getLastPeekHLLevel(), enddate, internal.name.name)
+        #self._osignal.basedOnRelativeStrenghtIndex14(stockname, df, enddate, internal.name)
+        #self._osignal.basedOnRSI14DivergenceLevel(stockname, df, enddate, internal.name)
+        self._osignal.basedOnBollingerBand(stockname, df, enddate, internal)
+        #self._osignal.basedOnPeekHighLowTrend(stockname, df, peekHL.findCurrentTrend(latestprice), enddate, internal.name)
+        #self._osignal.basedOnPeekHighLowSR(stockname, df, peekHL.getLastPeekSRLevel(), enddate, internal.name)
+
+        peekHL.__del__()
+
+    def Progressing(self, processingdata, enddate, internalInfo):
+        testFromDate = enddate - timedelta(days=self._backTestFromDay)
+        testInterval = 1
+        if internalInfo == enum.Interval.WEEKLY:
+            testInterval = 7
+        elif internalInfo == enum.Interval.MONTHLY:
+            testInterval = 31
+
+        if self._isTest:
+            dayDiff =  enddate - testFromDate
+        else: dayDiff = enddate - enddate
+        toolbar_width = dayDiff.days
+        # setup progressbar
+        sys.stdout.write("[%s]" % (" " * toolbar_width))
+        sys.stdout.flush()
+        sys.stdout.write("\b" * (toolbar_width+1)) # return to start of line, after '['
+        sys.stdout.write(internalInfo.name)
+        for stockname, data in processingdata.items():
+            if not self._isTest:
+                df = pd.DataFrame.from_dict(data)              
+                if df['close'].isnull().all():
+                    continue
+                self.CalulateTradingSignal(stockname, df, internalInfo)
+
+                sys.stdout.write("-")
+                sys.stdout.flush()
+
+                continue
+            
+            enddatefrom = testFromDate
+            prevLastEndDate = None
+            while (enddatefrom <= enddate):
+                testDataItems = [item for item in data if item['date'] <= enddatefrom] 
+                enddatefrom += timedelta(days=testInterval)
+                df = pd.DataFrame.from_dict(testDataItems) 
+                if df['close'].isnull().all():
+                    break     
+                lastEndDate = df['date'][len(df)-1]   
+                if prevLastEndDate != None and lastEndDate == prevLastEndDate:
+                    continue      
+                self.CalulateTradingSignal(stockname, df, internalInfo)
+                prevLastEndDate = lastEndDate
+
+                sys.stdout.write("-")
+                sys.stdout.flush()
+
+        sys.stdout.write("]\n") # this ends the progress bar
+
+    def Calculate(self, startdate, enddate):
+        #Get Stock List i/p
+        stockList = slist.StockList(enum.ExportFrom.GSHEET, self._isTest).get()
+
+        if len(stockList) > 0:
+            yahooAPI1 = yapi.YahooAPI(stockList)
+            dailyData = yahooAPI1.history_data(start=startdate, end=enddate, interval="1d").GetResult()
+
+            yahooAPI2 = yapi.YahooAPI(stockList)
+            weeklyData = yahooAPI2.history_data(start=startdate, end=enddate, interval="1wk").GetResult()
+
+            yahooAPI3 = yapi.YahooAPI(stockList)
+            monthlyData = yahooAPI3.history_data(start=startdate, end=enddate, interval="1mo").GetResult()
+
+            self.Progressing(dailyData, enddate, enum.Interval.DAILY)        
+            self.Progressing(weeklyData, enddate, enum.Interval.WEEKLY)  
+            self.Progressing(monthlyData, enddate, enum.Interval.MONTHLY)     
+                           
+        else: print('No stocks found in input file. Not able to process.')
 
 def gettradinglist2(source):
     trade_list = [] #empty list
