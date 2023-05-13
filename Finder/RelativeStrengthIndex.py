@@ -47,14 +47,14 @@ class RelativeStrengthIndex:
                 elif prev_close_price > close_price: 
                     trend = enum.Trend.DOWN
                 else:
-                    trend = enum.Trend.STRAIGHT
+                    trend = enum.Trend.SIDEWAYS
 
                 if self.PEEK_HIGH_LOW_TREND_COUNT == 0:
                     hl_close_price = close_price
                     hl_date = date
                     hl_rsi = rsi_14
                 else:
-                    if (preTrend == trend or trend == enum.Trend.STRAIGHT) and trend != enum.Trend.NONE:
+                    if (preTrend == trend or trend == enum.Trend.SIDEWAYS) and trend != enum.Trend.NONE:
                         trendContinueCnt = trendContinueCnt + 1
                     else:
                         trendContinueCnt = 0

@@ -51,3 +51,8 @@ class Indicator:
         rsi = 100 - 100 / (1 + relative_strength)
 
         return rsi
+    
+    def loadBasic(self, df):
+        df['sma_20'] = self.sma(df.close, 20)
+        df['upper20_bb'], df['lower20_bb'] = self.bb(df['close'], df['sma_20'], 20)
+        df['rsi_14'] = self.rsi(df['close'], 14)

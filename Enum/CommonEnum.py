@@ -60,8 +60,15 @@ class InLineSR(Enum):
 class Trend(Enum):
   UP = 1
   DOWN = 2
-  STRAIGHT = 3
+  SIDEWAYS = 3
   REVERSE = 4
+  NONE = 0
+
+class MarketStages(Enum):
+  ADVANCING = 1
+  DECLINING = 2
+  CONSOLIDATION_ACCUMULATION = 3
+  CONSOLIDATION_DISTRIBUTION = 4
   NONE = 0
 
 class Position(Enum):
@@ -74,15 +81,15 @@ class Position(Enum):
   R34 = 7
   NONE = 0
 
-  class Travel(Enum):
-    CPR = 1
-    S12 = 2
-    S23 = 3
-    S34 = 4
-    R12 = 5
-    R23 = 6
-    R34 = 7
-    NONE = 0
+class Travel(Enum):
+  CPR = 1
+  S12 = 2
+  S23 = 3
+  S34 = 4
+  R12 = 5
+  R23 = 6
+  R34 = 7
+  NONE = 0
 
 class BreakOut(Enum):
   SUPPORT = 1

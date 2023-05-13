@@ -37,7 +37,7 @@ def getTrend(prev_open_price, prev_close_price, live_close_price):
     elif round(live_close_price, 2) < round(halfCandle, 2):
         trend = enum.Trend.DOWN  
     elif round(live_close_price, 2) == round(prev_close_price, 2):
-        trend = enum.Trend.STRAIGHT
+        trend = enum.Trend.SIDEWAYS
     else:
         trend = enum.Trend.NONE
     return trend

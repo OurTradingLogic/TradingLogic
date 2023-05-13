@@ -52,7 +52,7 @@ class PeekHighLow:
 
             if i > 0:
                 trend = candle.getTrend(prev_open_price, prev_close_price, close_price)
-                if (preTrend == trend or trend == enum.Trend.STRAIGHT) and trend != enum.Trend.NONE:
+                if (preTrend == trend or trend == enum.Trend.SIDEWAYS) and trend != enum.Trend.NONE:
                     trendContinueCnt = trendContinueCnt + 1
                 else:
                     trendContinueCnt = 0
@@ -249,7 +249,7 @@ class PeekHighLow:
 
         return highestHitResistenceLevel.HighPrice
 
-    def findCurrentTrend(self, price):
+    def findCurrentPriceTrend(self, price):
         result = enum.Trend.NONE
         hl = self.__hl_list[-1]
         if price > hl.ClosePrice:
@@ -260,7 +260,7 @@ class PeekHighLow:
             if hl.PeekLevel == enum.PeekLevel.HIGH:   
                 result = enum.Trend.DOWN 
             else: result = enum.Trend.REVERSE 
-        else: result = enum.Trend.STRAIGHT 
+        else: result = enum.Trend.SIDEWAYS 
         
         return result 
 
@@ -287,7 +287,7 @@ class PeekHighLow:
         prevHighPeekTrend = enum.Trend.NONE
         iCnt = 0
         prevPeek = None
-        for hPeek in hPeekList:
+        for hPeek in hPeekList[-checkTrendCount:]:
             iCnt+=1
             
             if prevPeek != None:
@@ -302,7 +302,7 @@ class PeekHighLow:
                     else:
                         prevHighPeekTrend = enum.Trend.DOWN
                 else:
-                    prevHighPeekTrend = enum.Trend.STRAIGHT
+                    prevHighPeekTrend = enum.Trend.SIDEWAYS
 
                 if prevHighPeekTrend == enum.Trend.NONE:
                     break
@@ -315,7 +315,7 @@ class PeekHighLow:
         prevLowPeekTrend = enum.Trend.NONE
         iCnt = 0
         prevPeek = None
-        for lPeek in lPeekList:
+        for lPeek in lPeekList[-checkTrendCount:]:
             iCnt+=1
             
             if prevPeek != None:
@@ -330,7 +330,7 @@ class PeekHighLow:
                     else:
                         prevLowPeekTrend = enum.Trend.DOWN
                 else:
-                    prevLowPeekTrend = enum.Trend.STRAIGHT
+                    prevLowPeekTrend = enum.Trend.SIDEWAYS
 
                 if prevLowPeekTrend == enum.Trend.NONE:
                     break
