@@ -5,11 +5,12 @@ import Utility.YahooAPI as yapi
 import pandas as pd
 import Finder.Indicators as tools
 import Finder.PeekHighLow as peekHighLow
+#For Google Sheet Export
 from collections import defaultdict
 import pandas as pd
 import Utility.GSheet as gsheet
 
-startdate = datetime.now() - timedelta(365*8) - timedelta(20)
+startdate = datetime.now() - timedelta(365*2) - timedelta(20)
 enddate = datetime.now() - timedelta(1)
 stockList = slist.StockList(enum.ExportFrom.GSHEET, False).get()
 if len(stockList) > 0:
@@ -25,12 +26,13 @@ if len(stockList) > 0:
         indicator.loadBasic(df)
         peekHL = peekHighLow.PeekHighLow(df)
         latestprice = df['close'][len(df)-1]
-        checkContinueTrendCnt = 2
-        marketTrend = peekHL.getMarketTrendLine(checkContinueTrendCnt)
+        marketTrend = peekHL.getMarketTrendLine()
 
+        #For Google Sheet Export
         trend = {"Trend": marketTrend.name}
         marketTrendList[stockname].append(trend)
 
+    #Google Sheet Export Code
     index=[]
     trend=[]
     gs = gsheet.GSheet('OurTradingLogic')
