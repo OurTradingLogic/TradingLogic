@@ -6,6 +6,7 @@ class ExportFrom(Enum):
   JSON = 2
   WEB = 3
   GSHEET = 4
+  JSONDATA = 5
   NONE = 0 
 
 class ImportTo(Enum):
@@ -13,6 +14,7 @@ class ImportTo(Enum):
   JSON = 2
   WEB = 3
   GSHEET = 4
+  JSONDATA = 5
   NONE = 0 
 
 class Interval(Enum):

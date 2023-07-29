@@ -17,8 +17,9 @@ class StockList:
 
     _exportFrom = enum.ExportFrom.NONE
     _wks = None
-    def __init__(self, exportFrom, isTest = False):
+    def __init__(self, exportFrom, isTest = False, jsonData = ""):
         self._exportFrom = exportFrom
+        self._jsonData = jsonData
         if exportFrom == enum.ExportFrom.GSHEET:
             if isTest:
                 gSheetStockListConfig = jsonHelper.getnodedata('GSheet_StockList_BackTesting')
@@ -42,6 +43,16 @@ class StockList:
                 #list = self.constructlistjson(rows) 
                 list = self.__constructlist(ticket, market)
                 all_list.append(list)
+        elif self._exportFrom == enum.ExportFrom.JSONDATA:
+            #jstr = "{\"StockList\":[{\"Symbol\":\"AEGISCHEM\",\"Exchange\":\"NSE\"}],\"SignalList\":[{\"Name\":\"Bollinger Band\",\"Code\":\"NA\"}]}"
+            load = json.loads(self._jsonData)
+
+            for data in load["StockList"]:    
+                ticket = str(data['Symbol'])
+                market = str(data['Exchange'])
+                list = self.__constructlist(ticket, market) 
+                all_list.append(list)
+
         return all_list
 
     def __constructlist(self, symbol, exchange):

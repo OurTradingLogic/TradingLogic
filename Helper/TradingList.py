@@ -5,6 +5,7 @@ import Utility.YahooAPI as yapi
 import Finder.BollingerBand as bband
 import Finder.PivotPoint as pvpt
 import Enum.CommonEnum as enum
+import Enum.IndicatorEnum as ienum
 import Helper.StockList as slidt
 import os
 import Helper.JsonReader as jsonHelper
@@ -19,12 +20,14 @@ import sys
 class TradingList:
     _importto = enum.ImportTo.NONE
     _wks = None
-    def __init__(self, importto, isTest = False): 
+    def __init__(self, importto, exportFrom, isTest = False, jsonData = ""): 
         self._importto = importto
-        self._indicator = tools.Indicator()
+        self._indicator = tools.Indicator(jsonData)
+        self._indicators = self._indicator.get()
         self._osignal = snal.Signal()
         self._isTest = isTest
         self._backTestFromDay = 0
+        self._stockList = slist.StockList(exportFrom, isTest, jsonData).get()
         if importto == enum.ImportTo.GSHEET:
             if isTest:
                 gSheetStockListConfig = jsonHelper.getnodedata('GSheet_TradingList_BackTesting')
@@ -41,8 +44,8 @@ class TradingList:
         self._importto = None
 
     def write(self, dictList):
-        if self._importto == enum.ImportTo.GSHEET:
-            self._wks.clear()
+        #if self._importto == enum.ImportTo.GSHEET:
+            #self._wks.clear()
             index=[]
             tool=[]
             signal=[]
@@ -83,8 +86,10 @@ class TradingList:
         print("**************Exporting**************")
         tradingList = self._osignal.GetAllSignals()
         #Write Trading List o/p
-        self.write(tradingList)
+        if self._importto == enum.ImportTo.GSHEET:
+            self.write(tradingList)
         print("**************Final*****************")
+        return tradingList
 
     def CalulateTradingSignal(self, stockname, df, internal):
         if df['close'].isnull().all():
@@ -98,12 +103,18 @@ class TradingList:
 
         peekHL = peekHighLow.PeekHighLow(df)  
 
-        #self._osignal.basedOnMovingAverage20(stockname, df, peekHL.getLastPeekHLLevel(), enddate, internal.name.name)
-        #self._osignal.basedOnRelativeStrenghtIndex14(stockname, df, enddate, internal.name)
-        #self._osignal.basedOnRSI14DivergenceLevel(stockname, df, enddate, internal.name)
-        self._osignal.basedOnBollingerBand(stockname, df, enddate, internal)
-        #self._osignal.basedOnPeekHighLowTrend(stockname, df, peekHL.findCurrentTrend(latestprice), enddate, internal.name)
-        #self._osignal.basedOnPeekHighLowSR(stockname, df, peekHL.getLastPeekSRLevel(), enddate, internal.name)
+        if ienum.Indicators.MOVINGAVERAGE20.name in self._indicators:
+            self._osignal.basedOnMovingAverage20(stockname, df, peekHL.getLastPeekHLLevel(), enddate, internal)
+        if ienum.Indicators.RSI14_OverBoughtSold.name in self._indicators:
+            self._osignal.basedOnRelativeStrenghtIndex14(stockname, df, enddate, internal)
+        if ienum.Indicators.RSI14_DIVERGENCE.name in self._indicators:
+            self._osignal.basedOnRSI14DivergenceLevel(stockname, df, enddate, internal)
+        if ienum.Indicators.BBAND.name in self._indicators:
+            self._osignal.basedOnBollingerBand(stockname, df, enddate, internal)
+        if ienum.Indicators.TREND.name in self._indicators:
+            self._osignal.basedOnPeekHighLowTrend(stockname, df, peekHL.findCurrentPriceTrend(latestprice), enddate, internal)
+        if ienum.Indicators.SUPPORTRESISTENCE.name in self._indicators:
+            self._osignal.basedOnPeekHighLowSR(stockname, df, peekHL.getLastPeekSRLevel(), enddate, internal)
 
         peekHL.__del__()
 
@@ -157,16 +168,16 @@ class TradingList:
 
     def Calculate(self, startdate, enddate):
         #Get Stock List i/p
-        stockList = slist.StockList(enum.ExportFrom.GSHEET, self._isTest).get()
+        #stockList = slist.StockList(enum.ExportFrom.GSHEET, self._isTest).get()
 
-        if len(stockList) > 0:
-            yahooAPI1 = yapi.YahooAPI(stockList)
+        if len(self._stockList) > 0:
+            yahooAPI1 = yapi.YahooAPI(self._stockList)
             dailyData = yahooAPI1.history_data(start=startdate, end=enddate, interval="1d").GetResult()
 
-            yahooAPI2 = yapi.YahooAPI(stockList)
+            yahooAPI2 = yapi.YahooAPI(self._stockList)
             weeklyData = yahooAPI2.history_data(start=startdate, end=enddate, interval="1wk").GetResult()
 
-            yahooAPI3 = yapi.YahooAPI(stockList)
+            yahooAPI3 = yapi.YahooAPI(self._stockList)
             monthlyData = yahooAPI3.history_data(start=startdate, end=enddate, interval="1mo").GetResult()
 
             self.Progressing(dailyData, enddate, enum.Interval.DAILY)        
