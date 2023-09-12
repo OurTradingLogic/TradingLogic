@@ -25,8 +25,14 @@ class YahooAPI:
 
         return tickersresult  
 
-    def __constructData(self, stocksData):
-        for index, stock in stocksData.iterrows():  
+    def __constructData(self, stocksData, interval):
+        processData = stocksData
+
+        dateCorrection = self.__dateBackwardCorrection(stocksData, interval) 
+        if dateCorrection:
+            processData = processData[:-1]
+
+        for index, stock in processData.iterrows():  
             openList = []   
             highList = []  
             lowList = []  
@@ -113,8 +119,28 @@ class YahooAPI:
         self.__constructData(data)
         return self
 
-    def __constructSingleStockData(self, data, stockName):      
-        for index, row in data.iterrows():
+    def __dateBackwardCorrection(self, data, interval):
+        dateCorrection = False
+        if len(data) > 2:
+            latestDate = data.index[len(data)-1]
+            prevDate = data.index[len(data)-2]
+            if interval == '1wk':
+                if (latestDate - prevDate) < timedelta(6):
+                    dateCorrection = True
+            elif interval == '1mo':
+                if (latestDate - prevDate) < timedelta(28):
+                    dateCorrection = True
+        
+        return dateCorrection
+
+    def __constructSingleStockData(self, data, stockName, interval): 
+        processData = data
+
+        dateCorrection = self.__dateBackwardCorrection(data, interval) 
+        if dateCorrection:
+            processData = processData[:-1]
+
+        for index, row in processData.iterrows():
             data = {"date":index,"open":row['Open'],"high":row['High'],"low":row['Low'],"close":row['Close']}
             self.__stocksData[stockName].append(data)
         
@@ -124,11 +150,11 @@ class YahooAPI:
         if len(self.__ticketList) == 1:
             data = yf.download(tickers=self.__ticketList, start=start, end=end, interval=interval, \
                 auto_adjust=self.__auto_adjust, progress=self.__progress_bar)  
-            self.__constructSingleStockData(data, self.__ticketList[0])         
+            self.__constructSingleStockData(data, self.__ticketList[0], interval)         
         else:
             data = self.__tickets.download(start=start, end=end, interval=interval, \
                 auto_adjust=self.__auto_adjust, progress=self.__progress_bar)  
-            self.__constructData(data)
+            self.__constructData(data, interval)
         
         return self
 

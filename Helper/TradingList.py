@@ -10,7 +10,6 @@ import Helper.StockList as slidt
 import os
 import Helper.JsonReader as jsonHelper
 import Utility.GSheet as gsheet
-import pandas as pd
 import Helper.StockList as slist
 import Finder.Indicators as tools
 import Finder.Signal as snal
@@ -82,11 +81,12 @@ class TradingList:
         cjson = {"tradingsymbol" : trading_symbol}
         return cjson
 
-    def ExportSignal(self):
+    def ExportSignal(self):   
         print("**************Exporting**************")
         tradingList = self._osignal.GetAllSignals()
         #Write Trading List o/p
         if self._importto == enum.ImportTo.GSHEET:
+            self._wks.clear()
             self.write(tradingList)
         print("**************Final*****************")
         return tradingList
@@ -118,6 +118,26 @@ class TradingList:
 
         peekHL.__del__()
 
+    def CalulateTradingSignalBasedOnPattern(self, stockname, df, internal):
+        if df['close'].isnull().all():
+            return
+
+        enddate = df['date'][len(df)-1]
+        latestprice = df['close'][len(df)-1]
+        df['sma_20'] = self._indicator.sma(df.close, 20)
+        df['sma_10'] = self._indicator.sma(df.close, 10)
+        df['upper20_bb'], df['lower20_bb'] = self._indicator.bb(df['close'], df['sma_20'], 20)
+        df['rsi_14'] = self._indicator.rsi(df['close'], 14)
+
+        peekHL = peekHighLow.PeekHighLow(df)  
+
+        self._osignal.basedOnWickReversalPattern(stockname, df, peekHL.findCurrentPriceTrend(latestprice), enddate, internal)
+        self._osignal.basedOnExtremeReversalPattern(stockname, df, enddate, internal)
+        self._osignal.basedOnOutsideReversalPattern(stockname, df, enddate, internal)
+        self._osignal.basedOnDojiReversalPattern(stockname, df, enddate, internal)
+
+        peekHL.__del__()
+
     def Progressing(self, processingdata, enddate, internalInfo):
         testFromDate = enddate - timedelta(days=self._backTestFromDay)
         testInterval = 1
@@ -140,7 +160,8 @@ class TradingList:
                 df = pd.DataFrame.from_dict(data)              
                 if df['close'].isnull().all():
                     continue
-                self.CalulateTradingSignal(stockname, df, internalInfo)
+                #self.CalulateTradingSignal(stockname, df, internalInfo)
+                self.CalulateTradingSignalBasedOnPattern(stockname, df, internalInfo)
 
                 sys.stdout.write("-")
                 sys.stdout.flush()
@@ -158,7 +179,8 @@ class TradingList:
                 lastEndDate = df['date'][len(df)-1]   
                 if prevLastEndDate != None and lastEndDate == prevLastEndDate:
                     continue      
-                self.CalulateTradingSignal(stockname, df, internalInfo)
+                #self.CalulateTradingSignal(stockname, df, internalInfo)
+                self.CalulateTradingSignalBasedOnPattern(stockname, df, internalInfo)
                 prevLastEndDate = lastEndDate
 
                 sys.stdout.write("-")
@@ -180,9 +202,15 @@ class TradingList:
             yahooAPI3 = yapi.YahooAPI(self._stockList)
             monthlyData = yahooAPI3.history_data(start=startdate, end=enddate, interval="1mo").GetResult()
 
+            startdate15 = datetime.now() - timedelta(55)
+            enddate15 = datetime.now() - timedelta(1)
+            yahooAPI4 = yapi.YahooAPI(self._stockList)
+            minutes15Data = yahooAPI4.history_data(start=startdate15, end=enddate15, interval="15m").GetResult()
+
             self.Progressing(dailyData, enddate, enum.Interval.DAILY)        
             self.Progressing(weeklyData, enddate, enum.Interval.WEEKLY)  
-            self.Progressing(monthlyData, enddate, enum.Interval.MONTHLY)     
+            self.Progressing(monthlyData, enddate, enum.Interval.MONTHLY) 
+            self.Progressing(minutes15Data, enddate, enum.Interval.MINUTES_15)     
                            
         else: print('No stocks found in input file. Not able to process.')
 

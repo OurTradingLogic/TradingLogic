@@ -21,6 +21,7 @@ class Interval(Enum):
   DAILY = 1
   WEEKLY = 2
   MONTHLY = 3
+  MINUTES_15 = 4
   NONE = 0
 
 class PeekLevel(Enum):

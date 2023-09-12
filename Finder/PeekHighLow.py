@@ -251,21 +251,26 @@ class PeekHighLow:
 
     def findCurrentPriceTrend(self, price):
         result = enum.Trend.NONE
-        hl = self.__hl_list[-1]
-        if price > hl.ClosePrice:
-            if hl.PeekLevel == enum.PeekLevel.LOW:
-                result = enum.Trend.UP
-            else: result = enum.Trend.REVERSE
-        elif price < hl.ClosePrice:
-            if hl.PeekLevel == enum.PeekLevel.HIGH:   
-                result = enum.Trend.DOWN 
-            else: result = enum.Trend.REVERSE 
-        else: result = enum.Trend.SIDEWAYS 
+
+        if len(self.__hl_list) > 0:
+            hl = self.__hl_list[-1]
+            if price > hl.ClosePrice:
+                if hl.PeekLevel == enum.PeekLevel.LOW:
+                    result = enum.Trend.UP
+                else: result = enum.Trend.REVERSE
+            elif price < hl.ClosePrice:
+                if hl.PeekLevel == enum.PeekLevel.HIGH:   
+                    result = enum.Trend.DOWN 
+                else: result = enum.Trend.REVERSE 
+            else: result = enum.Trend.SIDEWAYS 
         
         return result 
 
     def getLastPeekHLLevel(self):
-        hlLevel = self.__hl_list[-1]
+        if self.__hl_list:
+            hlLevel = self.__hl_list[-1]
+        else:
+            hlLevel = None
         return hlLevel
 
     def getLastPeekSRLevel(self):

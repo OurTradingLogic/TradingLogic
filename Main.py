@@ -14,6 +14,9 @@ import Enum.CommonEnum as cenum
 import Utility.Constant as cons
 import Utility.Excel as excel
 import Utility.GSheet as gsheet
+import yfinance as yf
+import yahoo_fin as yfin
+from yahoo_fin import stock_info as si
 
 def getPivotPoint():
     trade_list = tlist.getpivotpointtradinglist("test")
@@ -26,6 +29,9 @@ def getBollingerBand():
     #print(trade_list)
     excel.WriteFromList(trade_list, cons.DATA_FOLDER+'TradingList.xlsx')
 
+
+print(yfin.__version__)
+print(yfin.__name__)
 #getPivotPoint()
 
 gs = gsheet.GSheet(cons.GSHEET_FILE1)

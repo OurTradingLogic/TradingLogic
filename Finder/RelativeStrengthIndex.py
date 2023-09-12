@@ -96,7 +96,10 @@ class RelativeStrengthIndex:
 
     def getLastOverBoughtSoldPeekLevel(self):
         getOverBoughtSoldPeekLevels = self.getOverBoughtSoldPeekLevels()
-        return getOverBoughtSoldPeekLevels[-1]
+        if getOverBoughtSoldPeekLevels:
+            return getOverBoughtSoldPeekLevels[-1]
+        else:
+            return None
 
     def __calculateDivergencePoints(self, waitingCount = 2): 
         overBoughtSoldDivergenceList = [] 

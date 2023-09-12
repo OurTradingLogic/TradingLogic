@@ -1,0 +1,8 @@
+from enum import Enum
+
+class ReversalPattern(Enum):
+    WICKREVERSALPATTERN = 1
+    EXTREMEREVERSALPATTERN = 2
+    OUTSIDEREVERSALPATTERN = 3
+    DOJIREVERSALPATTERN = 3
+    NONE = 0

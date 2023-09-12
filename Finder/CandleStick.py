@@ -1,5 +1,6 @@
 from cgitb import reset
 import Enum.CommonEnum as enum
+import Utility.Common as mCom
 
 def getCandleColor(openPrice, closePrice):
     if openPrice < closePrice:
@@ -19,6 +20,48 @@ def isRed(openPrice, closePrice):
 
 def getWidth(openPrice, closePrice):
     return abs(closePrice-openPrice)
+
+def getCandleWidth(openPrice, highPrice, lowPrice, closePrice, calcWithTail = False):
+    if calcWithTail:
+        candleWidth = getWidth(highPrice, lowPrice)
+    else: 
+        candleWidth = getWidth(openPrice, closePrice)
+
+    return candleWidth
+
+def getTailWidth(openPrice, highPrice, lowPrice, closePrice):
+    lowTail = getLowerTailWidth(openPrice, lowPrice, closePrice)
+    highTail = getUpperTailWidth(openPrice, highPrice, closePrice)
+
+    return abs(lowTail + highTail)
+
+def getCloseTailWidth(openPrice, highPrice, lowPrice, closePrice):
+    candleColor = getCandleColor(openPrice, closePrice)
+    if candleColor == enum.Candle.GREEN:
+        return abs(highPrice-closePrice)
+    elif candleColor == enum.Candle.RED:
+        return abs(closePrice-lowPrice)
+    else: return 0
+
+def getOpenTailWidth(openPrice, highPrice, lowPrice, closePrice):
+    candleColor = getCandleColor(openPrice, closePrice)
+    if candleColor == enum.Candle.RED:
+        return abs(highPrice-closePrice)
+    elif candleColor == enum.Candle.GREEN:
+        return abs(closePrice-lowPrice)
+    else: return 0
+
+def getCloseTailPercent(openPrice, highPrice, lowPrice, closePrice, calcWithTail = False):
+    candleWidth = getCandleWidth(openPrice, highPrice, lowPrice, closePrice, calcWithTail)
+    closeTailWidth = getCloseTailWidth(openPrice, highPrice, lowPrice, closePrice)
+
+    return (abs(closeTailWidth - candleWidth) / candleWidth) * 100.0
+
+def getBobyPercentWithTail(openPrice, highPrice, lowPrice, closePrice):
+    tailWidth = getTailWidth(openPrice, highPrice, lowPrice, closePrice)
+    bodyWidth = getCandleWidth(openPrice, highPrice, lowPrice, closePrice)
+
+    return (abs(bodyWidth - tailWidth) / tailWidth) * 100.0
 
 def getLowerTailWidth(openPrice, lowPrice, closePrice):
     if isGreen(openPrice, closePrice):
@@ -104,6 +147,31 @@ def find_Doji_Sys(openPrice, closePrice, prev_openPrice, prev_closePrice):
     # Bearish Doji     
     elif isGreen(prev_openPrice, prev_closePrice) and closePrice == openPrice:
         result = enum.DojiCandleSys.BEAR
+    return result
+
+def find_Doji(openPrice, highPrice, lowPrice, closePrice, bodyWidthPercent = 0):
+    result = False
+
+    bodyWidth = getWidth(openPrice, closePrice)
+    candleWidth = getWidth(highPrice, lowPrice)
+    bodyPercent = mCom.FindDifferencePercentage(bodyWidth, candleWidth) 
+    tailWidth = getTailWidth(openPrice, highPrice, lowPrice, closePrice)
+
+    if tailWidth > bodyWidth and bodyPercent <= bodyWidthPercent:
+        result = True
+
+    return result
+
+def find_SolidDoji(openPrice, highPrice, lowPrice, closePrice):
+    result = False
+
+    doji = find_Doji(openPrice, highPrice, lowPrice, closePrice, 0)
+    if doji:
+        lower_tail = getLowerTailWidth(openPrice, lowPrice, closePrice)
+        upper_tail = getUpperTailWidth(openPrice, highPrice, closePrice)
+        if lower_tail == upper_tail:
+            result = True
+
     return result
 
 def find_Marubozu_Sys(openPrice, highPrice, lowPrice, closePrice):
