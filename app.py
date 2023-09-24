@@ -10,6 +10,7 @@ import pandas as pd
 import Finder.Indicators as tools
 import Finder.BollingerBand as bband
 import Service.SignalGenerator as signalSer
+import Service.StockDetails as stDetails
 
 app = Flask(__name__)
 
@@ -42,6 +43,14 @@ def getSignalBasedOnIndicator():
     data = request.get_json()
 
     result = signalSer.tradingSignal(data)
+  
+    return jsonify(result), 201
+
+@app.route("/getstocks-livedetails", methods=["POST"])
+def getStockLiveDetails():
+    data = request.get_json()
+
+    result = stDetails.stockLiveDetails(data)
   
     return jsonify(result), 201
 

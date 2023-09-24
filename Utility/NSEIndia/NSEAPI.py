@@ -1,3 +1,6 @@
+#https://github.com/pratik141/nsedt/blob/29-dates-not-working-well-on-index-data/nsedt/resources/constants.py
+#https://github.com/swapniljariwala/nsepy/blob/master/nsepy/live.py
+#https://github.com/aeron7/nsepython/blob/master/nsepython/rahu.py
 from collections import defaultdict
 from datetime import datetime, timedelta
 from Utility import NSEIndia
@@ -6,8 +9,6 @@ import concurrent
 import logging
 import urllib
 from concurrent.futures import ALL_COMPLETED
-import requests
-import json
 import pandas as pd
 from Utility.NSEIndia import CustomFormat
 

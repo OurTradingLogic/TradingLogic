@@ -7,7 +7,7 @@ def InRange(a, b, c):
     return result
 
 def PercentageBy(a, b):
-    if a == b:
+    if a == b or b == 0:
         return 100.0
     try:
         return (abs(a - b) / b) * 100.0
