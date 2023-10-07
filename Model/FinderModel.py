@@ -1,4 +1,5 @@
 import Enum.CommonEnum as cenum
+from collections import defaultdict
 
 class MarketData:
     Date = None
@@ -70,5 +71,28 @@ class BollingerBandModel:
         self.BB_BreakOutLevel = bb_breakout
         self.BB_InLineLevel = bb_inline
         self.BB_OverHighLowLevel = bb_overhighlevel
+  
+class MarketProfileModel: 
+    MarketProfileList = defaultdict(list)
+    MaxPrice = None
+    MinPrice = None
+    def __init__(self, maxPrice, minPrice, marketProfileList): 
+        self.MaxPrice = maxPrice
+        self.MinPrice = minPrice
+        self.MarketProfileList = marketProfileList
 
-    
+class MarketVolumnProfileModel:
+    AdjClosePrice = None
+    TotalVolumn = None
+    def __init__(self, adjClose, totalVolumn): 
+        self.AdjClosePrice = adjClose
+        self.TotalVolumn = totalVolumn
+
+class MarketVolumnProfileListModel:
+    MarketVolumnProfileList = []
+    FromDate = None
+    ToDate = None
+    def __init__(self, marketVolumnProfileList, fromDate, toDate): 
+        self.MarketVolumnProfileList = marketVolumnProfileList
+        self.FromDate = fromDate
+        self.ToDate = toDate
