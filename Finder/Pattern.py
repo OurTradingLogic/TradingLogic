@@ -90,11 +90,11 @@ def findWickReversalPattern(openPrice, highPrice, lowPrice, closePrice, wickLeng
         if upper_tail > wick: 
             bottomTailPercent = mCom.FindDifferencePercentage(lower_tail, body)
             if bottomTailPercent <= 5:
-                result = mEnum.MarketType.MOREBULLISH 
+                result = mEnum.MarketType.MOREBEARISH 
         elif lower_tail > wick:
             topTailPercent = mCom.FindDifferencePercentage(upper_tail, body)
             if topTailPercent <= 35:
-                result = mEnum.MarketType.BEARISH 
+                result = mEnum.MarketType.BULLISH 
 
     return result
 
